@@ -1,0 +1,112 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+.app_container {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #2c3e50;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar_header {
+  padding: 25px;
+  background-color: #1a252f;
+  text-align: center;
+}
+
+.sidebar_header h2 {
+  font-size: 1.3em;
+}
+
+.sidebar_menu {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.sidebar_item {
+  padding: 18px 25px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sidebar_item:hover {
+  background-color: #34495e;
+}
+
+.sidebar_item.active {
+  background-color: #3498db;
+  border-left: 4px solid #2980b9;
+}
+
+/* main content */
+.main_content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  background-color: white;
+  padding: 25px 30px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header_title {
+  font-size: 1.8em;
+  color: #2c3e50;
+}
+
+.content_area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 30px;
+}
+
+/* until here */
+
+.section_title {
+  font-size: 1.5em;
+  color: #2c3e50;
+  margin-bottom: 25px;
+}
+
+/* placeholders for uploads and chatbot */
+.upload_container,
+.chatbot_container {
+  max-width: 800px;
+}
+
+.placeholder_box {
+  background-color: white;
+  padding: 60px;
+  text-align: center;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+  color: #6c757d;
+}
+
+/* make responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .content_area {
+    padding: 15px;
+  }
+}
