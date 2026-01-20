@@ -1,0 +1,171 @@
+/* Container principal du dashboard */
+.dashboard_container {
+  max-width: 1200px;
+}
+
+/* SECTION DES ALERTES */
+.alerts_section {
+  margin-bottom: 40px;
+}
+
+/* Carte d'alerte */
+.alert_card {
+  background-color: white;
+  border-left: 5px solid;
+  padding: 25px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Couleurs selon la gravite */
+.alert_card.high {
+  border-left-color: #e74c3c;
+}
+
+.alert_card.medium {
+  border-left-color: #f39c12;
+}
+
+.alert_card.low {
+  border-left-color: #27ae60;
+}
+
+/* Header de l'alerte avec les badges */
+.alert_header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.badge_component {
+  background-color: #ecf0f1;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 0.85em;
+  font-weight: bold;
+  color: #555;
+}
+
+.badge_severity {
+  background-color: #3498db;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+/* Titre de l'alerte */
+.alert_title {
+  color: #2c3e50;
+  font-size: 1.3em;
+  margin-bottom: 12px;
+}
+
+/* Message de l'alerte */
+.alert_message {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+/* Boite de recommandation */
+.recommendation_box {
+  background-color: #fff3cd;
+  border-left: 3px solid #ffc107;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 5px;
+}
+
+.recommendation_box strong {
+  display: block;
+  color: #856404;
+  margin-bottom: 8px;
+}
+
+.recommendation_box p {
+  color: #856404;
+  font-size: 0.95em;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Bouton marquer comme lu */
+.button_mark_read {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-top: 10px;
+}
+
+.button_mark_read:hover {
+  background-color: #2980b9;
+}
+
+/* Message quand pas d'alertes */
+.no_alerts {
+  text-align: center;
+  padding: 40px;
+  background-color: white;
+  border-radius: 8px;
+  color: #27ae60;
+  font-size: 1.2em;
+}
+
+/* SECTION RESUME */
+.summary_section {
+  background-color: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary_section h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.summary_grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.summary_card {
+  background-color: #f8f9fa;
+  padding: 25px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #e9ecef;
+}
+
+.summary_card h4 {
+  color: #6c757d;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+  font-weight: normal;
+}
+
+.summary_number {
+  font-size: 3em;
+  font-weight: bold;
+  color: #3498db;
+}
+
+.summary_number.critical {
+  color: #e74c3c;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .summary_grid {
+    grid-template-columns: 1fr;
+  }
+}
