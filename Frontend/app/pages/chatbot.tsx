@@ -10,5 +10,4 @@ function Chatbot() {
     </div>
   );
 }
-
 export default Chatbot;
