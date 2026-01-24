@@ -1,0 +1,27 @@
+(cors) {
+    @cors_preflight method OPTIONS
+
+    header {
+        Access-Control-Allow-Origin "{header.origin}"
+        Vary Origin
+        Access-Control-Expose-Headers "Authorization"
+        Access-Control-Allow-Credentials "true"
+    }
+
+    handle @cors_preflight {
+        header {
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE"
+            Access-Control-Max-Age "3600"
+        }
+        respond "" 204
+    }
+}
+
+http://localhost:8080 {
+    import cors {header.origin}
+    reverse_proxy /* localhost:5173
+}
+http://api.localhost:8080 {
+    import cors {header.origin}
+    reverse_proxy /* localhost:8000
+}
