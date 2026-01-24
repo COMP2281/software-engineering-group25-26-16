@@ -55,13 +55,15 @@
     --sidebar-width-collapsed: 60px;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+h1 {
+    padding-top: 0;
+    margin-top: 0;
 }
 
 body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     font-family: Arial, sans-serif;
     color: var(--text-primary);
     background-color: var(--bg-main);

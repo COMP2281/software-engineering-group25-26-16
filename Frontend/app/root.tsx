@@ -6,9 +6,20 @@ import {
   Scripts,
   ScrollRestoration,
 } from 'react-router';
+import { PrimeReactProvider, PrimeReactContext } from 'primereact/api';
 import './styles/global.css';
+import "primereact/resources/themes/lara-light-cyan/theme.css";
+import { Button } from 'primereact/button';
 
 export default function App() {
+    return (
+        <PrimeReactProvider>
+            <AppInner />
+        </PrimeReactProvider>
+    );
+}
+
+function AppInner() {
   return (
     <html lang="en">
       <head>
@@ -24,4 +35,5 @@ export default function App() {
       </body>
     </html>
   );
+
 }
