@@ -1,10 +1,8 @@
-/* Layout principal */
 .app_layout {
   display: flex;
   height: 100vh;
 }
 
-/* Zone de contenu */
 .main_content {
   flex: 1;
   overflow-y: auto;

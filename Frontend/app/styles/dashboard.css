@@ -1,14 +1,11 @@
-/* Container principal du dashboard */
 .dashboard_container {
   max-width: 1200px;
 }
 
-/* SECTION DES ALERTES */
 .alerts_section {
   margin-bottom: 40px;
 }
 
-/* Carte d'alerte */
 .alert_card {
   background-color: white;
   border-left: 5px solid;
@@ -18,28 +15,27 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Couleurs selon la gravite */
-.alert_card.high {
-  border-left-color: #e74c3c;
+
+.alert_card.high { 
+    /* gravity colors*/
+    border-left-color: #e74c3c;
 }
 
 .alert_card.medium {
-  border-left-color: #f39c12;
+    border-left-color: #f39c12;
 }
 
 .alert_card.low {
-  border-left-color: #27ae60;
+    border-left-color: #27ae60;
 }
-
-/* Header de l'alerte avec les badges */
 .alert_header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
 }
 
 .badge_component {
-  background-color: #ecf0f1;
+    background-color: #ecf0f1;
   padding: 6px 12px;
   border-radius: 5px;
   font-size: 0.85em;
@@ -55,22 +51,18 @@
   font-size: 0.8em;
   font-weight: bold;
 }
-
-/* Titre de l'alerte */
 .alert_title {
   color: #2c3e50;
   font-size: 1.3em;
   margin-bottom: 12px;
 }
 
-/* Message de l'alerte */
 .alert_message {
   color: #666;
   line-height: 1.6;
   margin-bottom: 15px;
 }
 
-/* Boite de recommandation */
 .recommendation_box {
   background-color: #fff3cd;
   border-left: 3px solid #ffc107;
@@ -92,10 +84,10 @@
   margin: 0;
 }
 
-/* Bouton marquer comme lu */
-.button_mark_read {
-  background-color: #3498db;
-  color: white;
+
+.button_mark_read { /* read button */
+    background-color: #3498db;
+    color: white;
   border: none;
   padding: 12px 24px;
   border-radius: 5px;
@@ -107,8 +99,6 @@
 .button_mark_read:hover {
   background-color: #2980b9;
 }
-
-/* Message quand pas d'alertes */
 .no_alerts {
   text-align: center;
   padding: 40px;
@@ -118,7 +108,6 @@
   font-size: 1.2em;
 }
 
-/* SECTION RESUME */
 .summary_section {
   background-color: white;
   padding: 25px;
@@ -163,7 +152,6 @@
   color: #e74c3c;
 }
 
-/* RESPONSIVE */
 @media (max-width: 768px) {
   .summary_grid {
     grid-template-columns: 1fr;
