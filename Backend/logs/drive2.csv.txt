@@ -1,0 +1,7 @@
+{"run_time": 1053.0, "message": "Fuel tank capacity low: 16.470589% remaining."}
+{"run_time": 1053.0, "message": "Fuel tank capacity low: 16.470589% remaining."}
+{"run_time": 1053.0, "message": "Fuel tank capacity low: 16.470589% remaining."}
+{"run_time": 1055.0, "message": "Fuel tank capacity low: 16.470589% remaining."}
+{"run_time": 1055.0, "message": "Fuel tank capacity low: 13.333333% remaining."}
+{"run_time": 1055.0, "message": "Fuel tank capacity low: 13.333333% remaining."}
+{"run_time": 1055.0, "message": "Fuel tank capacity low: 13.333333% remaining."}
