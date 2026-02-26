@@ -1,6 +1,6 @@
 .sidebar {
     width: var(--sidebar-width);
-    background-color: var(--secondary-color);
+    background-color: rgb(50, 55, 144);
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -8,7 +8,7 @@
 }
 .sidebar_header {
     padding: var(--spacing-xl);
-    background-color: black;
+    background-color: rgb(37, 40, 94);
     text-align: center;
     box-shadow: 4px 20px 15px rgba(0, 0, 0, 0.08);
 }
@@ -54,7 +54,7 @@
 
 
   /* 2. Add the shadow to the right side */
-  box-shadow: 4px 0px 15px rgba(0, 0, 0, 0.08);
+  box-shadow: 4px 0px 20px rgba(10, 6, 6, 0.3);
 
   /* 3. Make sure the sidebar stacks above the main content to show the shadow */
   z-index: 10;
@@ -80,3 +80,32 @@
   gap: 10px;
   /* ... existing header padding ... */
 }
+
+
+.sidebar.collapsed .sidebar_header {
+  justify-content: center; /* Centers the button horizontally */
+  padding-left: 0;         /* Removes left padding so it doesn't push the icon right */
+  padding-right: 0;        /* Removes right padding */
+}
+
+/* Base link styling (assuming you have display: flex here) */
+.sidebar_link {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Space between icon and text */
+  padding: 15px 20px; /* Normal padding */
+  /* ... your other link styles ... */
+}
+
+/* 🚨 THE FIX: When the sidebar is collapsed 🚨 */
+.sidebar.collapsed .sidebar_link {
+  padding-left: 0;   /* Removes the left space pushing the icon */
+  padding-right: 0;  /* Removes the right space */
+  justify-content: center; /* Locks the icon in the exact center */
+}
+
+/* Hide the text completely so it stops pushing the icon out of bounds */
+.sidebar.collapsed .sidebar_link span {
+  display: none;
+}
+

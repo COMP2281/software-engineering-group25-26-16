@@ -23,7 +23,7 @@ function Sidebar() {
           onClick={() => setIsCollapsed(!isCollapsed)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
         >
-          <Menu size={24} />
+          <Menu size={24} color="white" />
         </button>
 
         {/* 4. Only show the title if NOT collapsed */}
@@ -32,11 +32,13 @@ function Sidebar() {
 
       <nav className="sidebar_nav">
         <Link
-          to="/dashboard"
-          className={isActive('/dashboard') ? 'sidebar_link active' : 'sidebar_link'}
+          to="/"
+          className={isActive('/') ? 'sidebar_link active' : 'sidebar_link'}
         >
-          <LayoutDashboard size={18} />
-          {/* 5. Only show the text if NOT collapsed */}
+          {/* The icon is ALWAYS visible */}
+          <LayoutDashboard size={20} />
+
+          {/* ONLY the text hides when collapsed */}
           {!isCollapsed && <span> Dashboard </span>}
         </Link>
 
