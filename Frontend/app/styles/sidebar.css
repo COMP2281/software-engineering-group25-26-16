@@ -4,11 +4,13 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
+
 }
 .sidebar_header {
     padding: var(--spacing-xl);
-    background-color: var(--darker-secondary-color);
+    background-color: black;
     text-align: center;
+    box-shadow: 4px 20px 15px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar_header h2 {
@@ -35,7 +37,7 @@
 }
 
 .sidebar_link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(183, 157, 221, 0.1);
 }
 .sidebar_link.active {
     background-color: var(--primary-color);
@@ -46,4 +48,35 @@
   .sidebar {
     width: var(--sidebar-width);
   }
+}
+
+.sidebar{
+
+
+  /* 2. Add the shadow to the right side */
+  box-shadow: 4px 0px 15px rgba(0, 0, 0, 0.08);
+
+  /* 3. Make sure the sidebar stacks above the main content to show the shadow */
+  z-index: 10;
+}
+
+/* Base sidebar styles */
+.sidebar {
+  width: var(--sidebar-width); /* Uses your 250px variable */
+  transition: width 0.3s ease; /* Makes the shrinking/growing smooth! */
+  overflow: hidden; /* Prevents text from spilling out when shrinking */
+  /* ... your other existing sidebar styles ... */
+}
+
+/* When the collapsed class is added */
+.sidebar.collapsed {
+  width: var(--sidebar-width-collapsed); /* Uses your 60px variable */
+}
+
+/* Optional: Make the header layout look nice when collapsed */
+.sidebar_header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* ... existing header padding ... */
 }
