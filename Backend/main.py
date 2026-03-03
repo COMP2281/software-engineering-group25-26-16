@@ -1,9 +1,6 @@
 import os
 from fastapi import FastAPI, UploadFile, HTTPException
 import helpers
-from warning import FuelTankWarning
-from typing import Sequence
-import json
 
 app = FastAPI()
 
