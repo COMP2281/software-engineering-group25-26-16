@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
     /* use of blue to match ibm colors */
     --primary-color:#0F62FE; /* principal colors */

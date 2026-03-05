@@ -8,6 +8,9 @@ import {
 } from 'react-router';
 import { PrimeReactProvider, PrimeReactContext } from 'primereact/api';
 import './styles/global.css';
+import './styles/index.css';
+import './styles/dashboard.css';
+import './styles/chatbot.css';
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 import { Button } from 'primereact/button';
 

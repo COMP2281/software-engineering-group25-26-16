@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import '../styles/sidebar.css';
-
 import { LayoutDashboard, Upload, MessageCircle, Menu } from 'lucide-react';
 
 function Sidebar() {
   const location = useLocation();
-
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   function isActive(path: string) {
@@ -14,18 +12,14 @@ function Sidebar() {
   }
 
   return (
-
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-
       <div className="sidebar_header">
-
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
         >
           <Menu size={24} color="white" />
         </button>
-
 
         {!isCollapsed && <h2>Granite Guardian</h2>}
       </div>
@@ -35,11 +29,8 @@ function Sidebar() {
           to="/dashboard"
           className={isActive('/dashboard') ? 'sidebar_link active' : 'sidebar_link'}
         >
-
           <LayoutDashboard size={20} />
-
-
-          {!isCollapsed && <span> Dashboard </span>}
+          <span> Dashboard </span>
         </Link>
 
         <Link
@@ -47,7 +38,7 @@ function Sidebar() {
           className={isActive('/upload') ? 'sidebar_link active' : 'sidebar_link'}
         >
           <Upload size={18} />
-          {!isCollapsed && <span> Upload </span>}
+          <span> Upload </span>
         </Link>
 
         <Link
@@ -55,7 +46,7 @@ function Sidebar() {
           className={isActive('/chatbot') ? 'sidebar_link active' : 'sidebar_link'}
         >
           <MessageCircle size={18} />
-          {!isCollapsed && <span> Chatbot </span>}
+          <span> Chatbot </span>
         </Link>
       </nav>
     </div>
