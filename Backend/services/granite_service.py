@@ -5,6 +5,7 @@ Uses Ollama to run Granite locally for generating user-friendly diagnostics.
 
 from fastapi import HTTPException
 from config import GRANITE_MODEL
+from services.validators import validate_filename
 from services.diagnostics_service import run_diagnostics
 
 
@@ -30,9 +31,8 @@ def _build_prompt(warnings: list[dict], filename: str, alert_index: int | None =
             f"Do NOT use technical jargon."
         )
     else:
-        # Summarise all warnings
         warning_lines = []
-        for i, w in enumerate(warnings[:20]):  # Cap at 20 for prompt length
+        for i, w in enumerate(warnings[:20]):
             warning_lines.append(
                 f"{i+1}. [{w.get('severity', '?').upper()}] {w.get('message', 'Unknown issue')}"
             )
@@ -56,6 +56,7 @@ def generate_explanation(filename: str, alert_index: int | None = None) -> dict:
     Generate a natural-language explanation of diagnostics using IBM Granite.
     Falls back to a formatted summary if Granite/Ollama is unavailable.
     """
+    filename = validate_filename(filename)
     diagnostics = run_diagnostics(filename)
     warnings = diagnostics.get("warnings", [])
 
@@ -84,11 +85,11 @@ def generate_explanation(filename: str, alert_index: int | None = None) -> dict:
                 "total_warnings": len(warnings),
             }
     except ImportError:
-        pass  # Ollama not installed
+        pass
     except Exception:
-        pass  # Ollama/Granite not running
+        pass
 
-    # Fallback: generate a structured summary without LLM
+    # Fallback
     explanation = _fallback_explanation(warnings, alert_index)
     return {
         "filename": filename,
@@ -109,7 +110,6 @@ def _fallback_explanation(warnings: list[dict], alert_index: int | None = None) 
         urgency = "You should address this soon." if severity in ("high", "critical") else "This is not urgent but worth monitoring."
         return f"{message} {urgency}"
 
-    # Group by severity
     critical = [w for w in warnings if w.get("severity") == "critical"]
     high = [w for w in warnings if w.get("severity") == "high"]
     medium = [w for w in warnings if w.get("severity") == "medium"]

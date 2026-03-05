@@ -17,17 +17,7 @@ async def get_sensor_data(
     page: int = Query(default=1, ge=1, description="Page number (ignored if num_rows is set)"),
     page_size: int = Query(default=50, ge=1, le=500, description="Results per page"),
 ):
-    """
-    Retrieve sensor data from an uploaded CSV file.
-
-    **Sampling mode** (if `num_rows` is provided):
-    Returns N evenly-spaced rows from the dataset. Useful for graphing.
-
-    **Pagination mode** (default):
-    Returns paginated data with page/page_size controls.
-
-    Optionally filter columns with `fields` (comma-separated).
-    """
+    """Retrieve sensor data with optional sampling or pagination."""
     return data_service.get_sensor_data(
         filename=filename,
         num_rows=num_rows,
@@ -39,9 +29,5 @@ async def get_sensor_data(
 
 @router.get("/{filename}/summary")
 async def get_file_summary(filename: str):
-    """
-    Get summary statistics for a CSV file.
-
-    Returns min, max, mean, std, and null count for each numeric column.
-    """
+    """Get summary statistics (min, max, mean, std, nulls) for a CSV file."""
     return data_service.get_file_summary(filename)

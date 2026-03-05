@@ -3,6 +3,9 @@ Granite Guardian – Predictive Maintenance Advisor API
 =====================================================
 Main application entry point.
 Mounts all route modules and registers middleware.
+
+Run with:  uvicorn main:app --reload
+Docs at:   http://localhost:8000/docs  (Swagger UI)
 """
 
 import os
@@ -40,7 +43,7 @@ app.add_middleware(
 # ── Error handlers ───────────────────────────────────────────────
 register_error_handlers(app)
 
-# ── Ensure required directories exist ────────────────────────────
+# ── Ensure required directories exist on startup ─────────────────
 os.makedirs("./uploaded_data", exist_ok=True)
 os.makedirs("./logs", exist_ok=True)
 
@@ -65,7 +68,7 @@ async def health_check():
 
 @app.get("/health", tags=["Health"])
 async def health():
-    """Detailed health check."""
+    """Detailed health check including Granite availability and file count."""
     granite_available = False
     try:
         from ollama import generate

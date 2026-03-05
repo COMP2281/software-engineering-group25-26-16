@@ -7,22 +7,12 @@ import pandas as pd
 import numpy as np
 from fastapi import HTTPException
 from config import UPLOADED_FOLDER, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
-
-
-def _resolve_path(filename: str) -> str:
-    """Resolve and validate a CSV file path."""
-    if not filename or ".." in filename or "/" in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename.")
-
-    path = os.path.join(UPLOADED_FOLDER, filename)
-    if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail=f"File '{filename}' not found.")
-    return path
+from services.validators import validate_filename, require_file_exists
 
 
 def get_csv_as_dataframe(filename: str, fields: list[str] | None = None) -> pd.DataFrame:
     """Load a CSV into a DataFrame, optionally selecting specific columns."""
-    path = _resolve_path(filename)
+    path = require_file_exists(filename)
     try:
         if fields:
             available = pd.read_csv(path, nrows=0).columns.tolist()
@@ -56,7 +46,7 @@ def get_sensor_data(
 
     total_rows = len(df)
 
-    # If num_rows requested, return evenly-sampled rows
+    # Sampling mode
     if num_rows and num_rows > 0:
         if num_rows > total_rows:
             num_rows = total_rows
@@ -71,7 +61,7 @@ def get_sensor_data(
             "data": df.to_dict(orient="index"),
         }
 
-    # Otherwise paginate
+    # Pagination mode
     if page_size > MAX_PAGE_SIZE:
         page_size = MAX_PAGE_SIZE
 
@@ -102,7 +92,6 @@ def get_file_summary(filename: str) -> dict:
     """Return summary statistics for a CSV file."""
     df = get_csv_as_dataframe(filename)
 
-    # Basic stats for numeric columns
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     stats = {}
     for col in numeric_cols:

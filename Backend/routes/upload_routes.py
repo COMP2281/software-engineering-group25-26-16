@@ -12,19 +12,9 @@ router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
 @router.post("/", status_code=201)
 async def upload_file(file: UploadFile):
-    """
-    Upload a CSV file containing OBD-II sensor data.
-
-    - Validates content type (must be CSV)
-    - Rejects duplicates (409)
-    - Cleans data (removes duplicate rows, sorts by ENGINE RUN TIME)
-    - Automatically runs initial diagnostics
-
-    Returns upload metadata and any warnings found.
-    """
+    """Upload a CSV file containing OBD-II sensor data. Returns 201 on success."""
     result = await upload_service.save_upload(file)
 
-    # Run diagnostics on the new file
     diagnostics = diagnostics_service.run_diagnostics(result["filename"])
 
     return {
@@ -40,21 +30,13 @@ async def upload_file(file: UploadFile):
 
 @router.get("/")
 async def list_uploads():
-    """
-    List all uploaded CSV files.
-
-    Returns filenames and total count.
-    """
+    """List all uploaded CSV files."""
     files = upload_service.list_uploaded_files()
     return {"files": files, "count": len(files)}
 
 
 @router.delete("/{filename}")
 async def delete_upload(filename: str):
-    """
-    Delete an uploaded CSV file and its associated warning log.
-
-    Returns 404 if the file does not exist.
-    """
+    """Delete an uploaded CSV and its warning log. Returns 404 if not found."""
     deleted = upload_service.delete_file(filename)
     return {"message": f"File '{deleted}' deleted successfully.", "filename": deleted}

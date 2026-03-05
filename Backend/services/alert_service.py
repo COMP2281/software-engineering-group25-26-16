@@ -4,9 +4,9 @@ Handles retrieval, filtering, acknowledgement, and clearing of warning logs.
 """
 
 import os
-import json
 from fastapi import HTTPException
-from config import UPLOADED_FOLDER, LOG_FOLDER
+from config import LOG_FOLDER
+from services.validators import validate_filename
 from services.upload_service import list_uploaded_files
 from services.diagnostics_service import get_log_json
 
@@ -22,9 +22,9 @@ def get_warnings_for_file(
 ) -> dict:
     """
     Get warnings for a specific file with optional filters.
+    Returns 400 for bad filename, 404 if no log exists.
     """
-    if not filename or ".." in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename.")
+    filename = validate_filename(filename)
 
     log_data = get_log_json(filename)
     if log_data is None:
@@ -33,12 +33,10 @@ def get_warnings_for_file(
     warnings = log_data.get("warnings", [])
     acked_set = _acknowledged.get(filename, set())
 
-    # Attach acknowledged status
     for i, w in enumerate(warnings):
         w["index"] = i
         w["acknowledged"] = i in acked_set
 
-    # Apply filters
     if severity:
         warnings = [w for w in warnings if w.get("severity") == severity]
 
@@ -59,7 +57,7 @@ def get_all_warnings(
     severity: str | None = None,
     sensor_type: str | None = None,
 ) -> dict:
-    """Get warnings across all uploaded files."""
+    """Get warnings across all uploaded files with optional filters."""
     files = list_uploaded_files()
     all_logs: dict[str, dict] = {}
 
@@ -91,7 +89,9 @@ def get_all_warnings(
 
 
 def acknowledge_alert(filename: str, alert_index: int) -> dict:
-    """Mark an alert as acknowledged."""
+    """Mark an alert as acknowledged. Returns 400 if index out of range, 404 if no log."""
+    filename = validate_filename(filename)
+
     log_data = get_log_json(filename)
     if log_data is None:
         raise HTTPException(status_code=404, detail=f"No warning log found for '{filename}'.")
@@ -117,6 +117,8 @@ def acknowledge_alert(filename: str, alert_index: int) -> dict:
 
 def unacknowledge_alert(filename: str, alert_index: int) -> dict:
     """Remove acknowledgement from an alert."""
+    filename = validate_filename(filename)
+
     if filename in _acknowledged:
         _acknowledged[filename].discard(alert_index)
 
@@ -129,7 +131,9 @@ def unacknowledge_alert(filename: str, alert_index: int) -> dict:
 
 
 def clear_logs_for_file(filename: str) -> dict:
-    """Clear warning logs for a specific file."""
+    """Clear warning logs for a specific file. Returns removed count."""
+    filename = validate_filename(filename)
+
     log_path = os.path.join(LOG_FOLDER, f"{filename}.txt")
     if not os.path.exists(log_path):
         raise HTTPException(status_code=404, detail=f"No log found for '{filename}'.")
@@ -137,11 +141,15 @@ def clear_logs_for_file(filename: str) -> dict:
     os.remove(log_path)
     _acknowledged.pop(filename, None)
 
-    return {"message": f"Log cleared for '{filename}'.", "filename": filename}
+    return {
+        "message": f"Log cleared for '{filename}'.",
+        "filename": filename,
+        "removed": 1,
+    }
 
 
 def clear_all_logs() -> dict:
-    """Clear all warning logs."""
+    """Clear all warning logs. Returns total removed count."""
     removed = 0
     for fname in list_uploaded_files():
         log_path = os.path.join(LOG_FOLDER, f"{fname}.txt")
@@ -150,4 +158,7 @@ def clear_all_logs() -> dict:
             removed += 1
     _acknowledged.clear()
 
-    return {"message": "All logs cleared.", "removed": removed}
+    return {
+        "message": "All logs cleared.",
+        "removed": removed,
+    }

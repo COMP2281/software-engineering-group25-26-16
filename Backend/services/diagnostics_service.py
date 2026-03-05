@@ -1,12 +1,15 @@
 """
 Service layer for anomaly detection and diagnostics.
 Scans OBD-II data against configurable thresholds and generates typed warnings.
+
+Guarantees: every call either writes/updates the per-file log OR raises a
+clear HTTPException (400 / 404 / 500).
 """
 
 import os
 import json
 from fastapi import HTTPException
-from config import UPLOADED_FOLDER, LOG_FOLDER, ANOMALY_THRESHOLDS
+from config import LOG_FOLDER, ANOMALY_THRESHOLDS
 from models.warning import (
     Warning,
     Severity,
@@ -17,6 +20,7 @@ from models.warning import (
     EngineLoadWarning,
     IntakeAirTempWarning,
 )
+from services.validators import validate_filename, require_file_exists
 from services.data_service import get_csv_as_dataframe
 
 # Sensors that the user has disabled (e.g. malfunctioning)
@@ -54,7 +58,6 @@ def _scan_row(row: dict) -> list[Warning]:
     warnings: list[Warning] = []
     run_time = _get_run_time(row)
 
-    # Map column names (case-insensitive) to their values
     upper_row = {k.upper().strip(): v for k, v in row.items()}
 
     # Fuel Tank
@@ -142,10 +145,11 @@ def _build_summary(warnings: list[Warning]) -> dict:
 def run_diagnostics(filename: str, force_rescan: bool = False) -> dict:
     """
     Run full anomaly detection on a CSV file.
+    Always either writes/updates the log file OR raises an HTTPException.
     Caches results to log files; use force_rescan=True to re-run.
     """
-    if not filename or ".." in filename or "/" in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename.")
+    filename = validate_filename(filename)
+    require_file_exists(filename)
 
     # Check cache unless forced
     if not force_rescan:
@@ -159,7 +163,7 @@ def run_diagnostics(filename: str, force_rescan: bool = False) -> dict:
                 "cached": True,
             }
 
-    # Load data
+    # Load data (raises 404 if file missing, 500 if unreadable)
     df = get_csv_as_dataframe(filename)
     data = df.to_dict(orient="index")
 
@@ -168,7 +172,7 @@ def run_diagnostics(filename: str, force_rescan: bool = False) -> dict:
         row_warnings = _scan_row(row)
         all_warnings.extend(row_warnings)
 
-    # Save to log
+    # Always write log
     log_warnings(filename, all_warnings)
 
     warning_dicts = [w.to_dict() for w in all_warnings]
@@ -184,7 +188,7 @@ def run_diagnostics(filename: str, force_rescan: bool = False) -> dict:
 
 
 def log_warnings(filename: str, warnings: list[Warning]) -> None:
-    """Persist warnings to a log file."""
+    """Persist warnings to a log file. Creates log directory if needed."""
     os.makedirs(LOG_FOLDER, exist_ok=True)
     filepath = os.path.join(LOG_FOLDER, f"{filename}.txt")
     with open(filepath, "w") as f:
@@ -193,7 +197,7 @@ def log_warnings(filename: str, warnings: list[Warning]) -> None:
 
 
 def get_log_json(filename: str) -> dict | None:
-    """Load cached diagnostics from a log file."""
+    """Load cached diagnostics from a log file. Returns None if no log exists."""
     filepath = os.path.join(LOG_FOLDER, f"{filename}.txt")
     if not os.path.exists(filepath):
         return None
@@ -208,7 +212,6 @@ def get_log_json(filename: str) -> dict | None:
                 except json.JSONDecodeError:
                     continue
 
-    # Build summary from loaded warnings
     by_type: dict[str, int] = {}
     by_severity: dict[str, int] = {}
     for w in warnings:

@@ -7,18 +7,18 @@ import os
 import pandas as pd
 from fastapi import UploadFile, HTTPException
 from config import UPLOADED_FOLDER, KNOWN_SENSORS
+from services.validators import validate_filename
 
 
 def validate_csv_content(filepath: str) -> dict:
     """
     Validate that the CSV has usable OBD-II data.
     Returns metadata about the parsed file.
-    Raises HTTPException on validation failure.
+    Raises HTTPException on validation failure (cleans up bad file).
     """
     try:
         df = pd.read_csv(filepath, index_col=False)
     except Exception as e:
-        # Clean up the bad file
         if os.path.exists(filepath):
             os.remove(filepath)
         raise HTTPException(status_code=400, detail=f"Could not parse CSV: {str(e)}")
@@ -28,7 +28,6 @@ def validate_csv_content(filepath: str) -> dict:
             os.remove(filepath)
         raise HTTPException(status_code=400, detail="CSV file is empty – no rows found.")
 
-    # Check which known sensors are present
     columns = [col.strip() for col in df.columns.tolist()]
     recognised = [col for col in columns if col.upper() in [s.upper() for s in KNOWN_SENSORS]]
 
@@ -56,7 +55,6 @@ def validate_csv_content(filepath: str) -> dict:
     if run_time_col:
         df = df.sort_values(by=run_time_col, ascending=True).reset_index(drop=True)
 
-    # Overwrite with cleaned data
     df.to_csv(filepath, index=False)
 
     return {
@@ -70,32 +68,41 @@ def validate_csv_content(filepath: str) -> dict:
 async def save_upload(file: UploadFile) -> dict:
     """
     Save an uploaded file after validation.
-    Returns file metadata and validation results.
-    """
-    # 1) Content type check
-    if file.content_type not in ("text/csv", "application/vnd.ms-excel"):
-        raise HTTPException(status_code=415, detail="Only CSV files are allowed.")
 
-    # 2) Filename check
+    Validation order:
+      1. Filename extension (.csv) → 415 if not CSV
+      2. Content-type header → 415 if mismatch
+      3. Filename safety (traversal, length) → 400
+      4. Duplicate check → 409
+      5. File content (empty, unparseable, no sensors) → 400
+    """
+    # 1) Filename must exist and end with .csv
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided.")
 
     filename = file.filename.strip()
-    if not filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="File must have a .csv extension.")
+    if not filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=415, detail="Only .csv files are allowed.")
 
-    if ".." in filename or "/" in filename or "\\" in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename.")
+    # 2) Content-type check (secondary)
+    allowed_types = ("text/csv", "application/vnd.ms-excel", "application/octet-stream")
+    if file.content_type and file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Only CSV files are allowed. Received content-type: {file.content_type}"
+        )
 
-    # 3) Check length constraint
-    if len(filename) > 255:
-        raise HTTPException(status_code=400, detail="Filename is too long (max 255 characters).")
+    # 3) Filename safety via shared validator (traversal, length)
+    filename = validate_filename(filename)
 
     path = os.path.join(UPLOADED_FOLDER, filename)
 
     # 4) Duplicate check
     if os.path.exists(path):
-        raise HTTPException(status_code=409, detail=f"File '{filename}' already exists. Delete it first or use a different name.")
+        raise HTTPException(
+            status_code=409,
+            detail=f"File '{filename}' already exists. Delete it first or use a different name."
+        )
 
     # 5) Read and save
     content = await file.read()
@@ -105,7 +112,7 @@ async def save_upload(file: UploadFile) -> dict:
     with open(path, "wb") as f:
         f.write(content)
 
-    # 6) Validate content
+    # 6) Validate CSV content (cleans up file on failure)
     metadata = validate_csv_content(path)
 
     return {
@@ -115,9 +122,11 @@ async def save_upload(file: UploadFile) -> dict:
 
 
 def delete_file(filename: str) -> str:
-    """Delete an uploaded CSV and its associated log."""
-    if not filename or ".." in filename or "/" in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename.")
+    """
+    Delete an uploaded CSV and its associated log.
+    After deletion, /alerts/{filename} and /diagnostics/{filename} will return 404.
+    """
+    filename = validate_filename(filename)
 
     path = os.path.join(UPLOADED_FOLDER, filename)
     if not os.path.exists(path):
@@ -125,7 +134,6 @@ def delete_file(filename: str) -> str:
 
     os.remove(path)
 
-    # Also remove log if present
     log_path = os.path.join("./logs", f"{filename}.txt")
     if os.path.exists(log_path):
         os.remove(log_path)
