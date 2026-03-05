@@ -52,6 +52,66 @@ def clean_data(df, window_size=5):
 
     return windows
 
+# ONE-CLASS KNN CLASSIFIER
+
+from sklearn.neighbors import NearestNeighbors
+
+
+def windows_to_matrix(windows):
+    # Our sliding windows currently have shape:
+    # (num_windows, window_size, num_features)
+
+    # Machine learning models expect:
+    # (num_samples, num_features)
+
+    # So here we flatten each window into one long feature vector
+
+    num_windows = windows.shape[0]
+
+    # reshape into 2D matrix
+    X = windows.reshape(num_windows, -1)
+
+    return X
+
+
+def train_oneclass_knn(normal_windows):
+    # Train the anomaly detector using only NORMAL data
+
+    # Step 1: convert sliding windows into a feature matrix
+    X_train = windows_to_matrix(normal_windows)
+
+    # Step 2: create the nearest neighbour model (k = 1)
+    knn = NearestNeighbors(n_neighbors=1)
+
+    # Step 3: train the model using only normal data
+    knn.fit(X_train)
+
+    # Step 4: compute distance from each point to its nearest neighbour
+    distances, _ = knn.kneighbors(X_train)
+
+    # Step 5: use the largest distance as the anomaly threshold
+    threshold = np.max(distances)
+
+    return knn, threshold
+
+
+def detect_anomalies(model, threshold, test_windows):
+    # Detect anomalies in new data
+
+    # convert sliding windows into feature matrix
+    X_test = windows_to_matrix(test_windows)
+
+    # compute distances to nearest normal point
+    distances, _ = model.kneighbors(X_test)
+
+    # flatten distances array
+    distances = distances.flatten()
+
+    # if distance > threshold → anomaly
+    predictions = (distances > threshold).astype(int)
+
+    # 1 = anomaly, 0 = normal
+    return predictions, distances
 
 def generate_flicker_noise(n, alpha=1.0, random_state=None):
     rng = np.random.default_rng(random_state)
