@@ -19,14 +19,17 @@ def sliding_window(df: pd.DataFrame, n=5):
 
     return window_inputs, window_targets
 
+def create_sliding_windows(df, window_size):
+    windows = [df.iloc[i:i+window_size].values for i in range(len(df) - window_size + 1)]
+    return np.array(windows)
 
 def feature_selection(df):
     cols = ["ENGINE LOAD", "ENGINE RPM", "LONG TERM FUEL TRIM BANK 1", "FUEL TANK", "INTAKE MANIFOLD PRESSURE", "CATALYST TEMPERATURE BANK1 SENSOR1", "CATALYST TEMPERATURE BANK1 SENSOR2", "COOLANT TEMPERATURE", "COOLANT TEMPERATURE STD"]
     return df[cols]
 
-def clean_data(df, n=5):
+def clean_data(df, window_size=5):
     # add standard deviation of coolant temperature as a feature
-    std_temp = df["COOLANT TEMPERATURE"].rolling(n).std()
+    std_temp = df["COOLANT TEMPERATURE"].rolling(window_size).std()
 
     # normalise between 0 and 1
     std_temp_min = std_temp.min()
@@ -37,13 +40,17 @@ def clean_data(df, n=5):
     df = feature_selection(df)
 
     # perform feature extraction
-    window_inputs, window_targets = sliding_window(df, n=5)
+    #window_inputs, window_targets = sliding_window(df, n=5)
+    windows = create_sliding_windows(df, window_size=window_size)
 
-    # save to file
-    path = "cleaned_drive1.csv"
-    df.to_csv(path, index=False)
+    # # save to file
+    # path = "cleaned_drive1.csv"
+    # df.to_csv(path, index=False)
 
-    return window_inputs, window_targets
+    # shape of windows = (num_windows, num_rows_per_window, num_features)
+    print(f"Shape: {windows.shape}");
+
+    return windows
 
 
 def generate_flicker_noise(n, alpha=1.0, random_state=None):
@@ -112,13 +119,13 @@ if __name__ == "__main__":
     for file in range(1, num_anomalous + 1):
         print(f"Processing file {file}...")
         df = load_data_frame(f"../sample_data/idle{file}.csv")
-        clean_data(df)
-        add_noise_for_engine_coolant_temperature(df, snr_db=20, alpha=1.0, random_state=42)
+        df = add_noise_for_engine_coolant_temperature(df, snr_db=20, alpha=1.0, random_state=42)
+        df = clean_data(df)
         anomalous.append(df)
 
     # normal data
     for file in range(num_anomalous, num_files + 1):
         print(f"Processing file {file}...")
         df = load_data_frame(f"../sample_data/idle{file}.csv")
-        clean_data(df)
+        df = clean_data(df)
         normal.append(df)
