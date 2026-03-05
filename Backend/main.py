@@ -15,6 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routes import upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
 from middleware.error_handler import register_error_handlers
+from middleware.security import SecurityHeadersMiddleware
+from middleware.rate_limiter import register_rate_limiter
+from middleware.request_logger import RequestLoggerMiddleware
 
 # ── Logging ──────────────────────────────────────────────────────
 logging.basicConfig(
@@ -31,7 +34,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# ── CORS (allow frontend origins) ────────────────────────────────
+# ── Middleware stack (order matters: last added = first executed) ─
+# 1. CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],           # tighten for production
@@ -39,6 +43,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# 2. Security headers (helmet equivalent)
+app.add_middleware(SecurityHeadersMiddleware)
+# 3. Request logging (method + url + status + duration)
+app.add_middleware(RequestLoggerMiddleware)
+# 4. Rate limiting (200 req/min per IP)
+register_rate_limiter(app)
 
 # ── Error handlers ───────────────────────────────────────────────
 register_error_handlers(app)
