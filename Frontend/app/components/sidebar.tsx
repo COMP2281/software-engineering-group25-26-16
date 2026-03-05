@@ -32,8 +32,8 @@ function Sidebar() {
 
       <nav className="sidebar_nav">
         <Link
-          to="/"
-          className={isActive('/') ? 'sidebar_link active' : 'sidebar_link'}
+          to="/dashboard"
+          className={isActive('/dashboard') ? 'sidebar_link active' : 'sidebar_link'}
         >
 
           <LayoutDashboard size={20} />
