@@ -1,49 +1,93 @@
-.sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--secondary-color);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+/* 1. If you don't have these variables, the width won't work! */
+:root {
+  --sidebar-width: 260px;
+  --sidebar-width-collapsed: 80px;
+  --spacing-lg: 15px;
+  --spacing-xl: 20px;
+  --font-size-lg: 1.25rem;
+  --primary-color: rgb(75, 80, 180);
+  --darker-primary-color: rgb(50, 55, 144);
 }
+
+/* 2. Main Sidebar Container */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: rgb(50, 55, 144);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0px 20px rgba(10, 6, 6, 0.3);
+  z-index: 10;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  flex-shrink: 0; /* Stops the main page from squishing the sidebar */
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-width-collapsed);
+}
+
+/* 3. Header */
 .sidebar_header {
-    padding: var(--spacing-xl);
-    background-color: var(--darker-secondary-color);
-    text-align: center;
+  padding: var(--spacing-xl);
+  background-color: rgb(37, 40, 94);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 4px 20px 15px rgba(0, 0, 0, 0.08);
+  white-space: nowrap; /* Crucial for smooth animation */
+}
+
+.sidebar.collapsed .sidebar_header {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .sidebar_header h2 {
-    color: white;
-    font-size: var(--font-size-lg);
-    margin: 0;
-}
-.sidebar_nav { /* navigation section */
-    display: flex;
-    flex-direction: column;
-    padding-top: var(--spacing-lg);
+  color: white;
+  font-size: var(--font-size-lg);
+  margin: 0;
 }
 
-/* nav links*/
+.sidebar.collapsed .sidebar_header h2 {
+  display: none; /* Let CSS hide the title, not React! */
+}
+
+/* 4. Navigation Links */
+.sidebar_nav {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--spacing-lg);
+}
+
 .sidebar_link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 18px var(--spacing-xl);
-    color: white;
-    text-decoration: none;
-    transition: background-color 0.2s;
-    border-left: 4px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 18px var(--spacing-xl);
+  color: white;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  border-left: 4px solid transparent;
+  white-space: nowrap; /* Crucial for smooth animation */
 }
 
 .sidebar_link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-.sidebar_link.active {
-    background-color: var(--primary-color);
-    border-left-color: var(--darker-primary-color);
+  background-color: rgba(183, 157, 221, 0.1);
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: var(--sidebar-width);
-  }
+.sidebar_link.active {
+  background-color: var(--primary-color);
+  border-left-color: var(--darker-primary-color);
+}
+
+.sidebar.collapsed .sidebar_link {
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar_link span {
+  display: none;
 }

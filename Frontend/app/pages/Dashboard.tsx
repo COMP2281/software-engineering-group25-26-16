@@ -1,17 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/pages.css';
-import pagewrapper from '../components/Pagewrapper';
 
 // function for the dashboard (ill complete it later)
 function Dashboard() {
+  // 2. We use state so we can delete alerts later when clicking "Mark as Read"
+  const [alerts, setAlerts] = useState(initialAlerts);
+
+  // 3. A quick function to remove an alert from the screen
+  const dismissAlert = (id: number) => {
+    setAlerts(alerts.filter(alert => alert.id !== id));
+  };
+
   return (
-    <pagewrapper 
-    title="Dashboard">
+    <div className="page_container">
       <h1>Dashboard</h1>
       <p>dashboard content here!!</p>
-    </pagewrapper>
+    </div>
   );
 }
+
 export default Dashboard;
 
 
