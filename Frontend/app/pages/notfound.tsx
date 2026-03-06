@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/pages.css';
 
-// errors handling 
+// errors handling page
 function NotFound() {
   return (
     <div className="notfound_container">
