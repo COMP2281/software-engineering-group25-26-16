@@ -52,62 +52,109 @@ def clean_data(df, window_size=5):
 
     return windows
 
-# ONE-CLASS KNN CLASSIFIER
+from sklearn.neighbors import NearestNeighbors
+
 
 from sklearn.neighbors import NearestNeighbors
 
 
+# we store these so we can normalise the test data
+# using the same values from the training data
+_train_mean = None
+_train_std = None
+
+
 def windows_to_matrix(windows):
-    # Our sliding windows currently have shape:
-    # (num_windows, window_size, num_features)
+    # each window has shape:
+    # (window_size, num_features)
 
-    # Machine learning models expect:
-    # (num_samples, num_features)
+    # instead of flattening the whole window directly,
+    # we create some simple summary features
 
-    # So here we flatten each window into one long feature vector
+    # average value in the window
+    means = np.mean(windows, axis=1)
 
-    num_windows = windows.shape[0]
+    # standard deviation in the window
+    stds = np.std(windows, axis=1)
 
-    # reshape into 2D matrix
-    X = windows.reshape(num_windows, -1)
+    # last value of the window (most recent reading)
+    lasts = windows[:, -1, :]
+
+    # combine everything into one feature matrix
+    X = np.concatenate([means, stds, lasts], axis=1)
+
+    # remove rows that contain NaN values
+    # these come from the rolling std earlier
+    X = X[~np.isnan(X).any(axis=1)]
 
     return X
 
 
-def train_oneclass_knn(normal_windows):
-    # Train the anomaly detector using only NORMAL data
+def normalise_train(X):
+    # compute mean and std from training data
+    global _train_mean, _train_std
 
-    # Step 1: convert sliding windows into a feature matrix
+    _train_mean = np.mean(X, axis=0)
+    _train_std = np.std(X, axis=0)
+
+    # avoid division by zero
+    _train_std[_train_std == 0] = 1
+
+    # standardise the data
+    return (X - _train_mean) / _train_std
+
+
+def normalise_test(X):
+    # apply the same scaling used for training
+    global _train_mean, _train_std
+
+    return (X - _train_mean) / _train_std
+
+
+def train_oneclass_knn(normal_windows):
+    # convert windows into feature vectors
     X_train = windows_to_matrix(normal_windows)
 
-    # Step 2: create the nearest neighbour model (k = 1)
-    knn = NearestNeighbors(n_neighbors=1)
+    # scale the features so they are comparable
+    X_train = normalise_train(X_train)
 
-    # Step 3: train the model using only normal data
+    # we use k=2 because the closest neighbour
+    # will always be the point itself
+    knn = NearestNeighbors(n_neighbors=2)
+
+    # train using only normal data
     knn.fit(X_train)
 
-    # Step 4: compute distance from each point to its nearest neighbour
     distances, _ = knn.kneighbors(X_train)
 
-    # Step 5: use the largest distance as the anomaly threshold
-    threshold = np.max(distances)
+    # ignore the first column (distance to itself = 0)
+    real_distances = distances[:, 1]
+
+    # instead of using the max distance,
+    # we use the 95th percentile as a threshold
+    # this usually gives better anomaly detection
+    threshold = np.percentile(real_distances, 95)
 
     return knn, threshold
 
 
 def detect_anomalies(model, threshold, test_windows):
-    # Detect anomalies in new data
-
-    # convert sliding windows into feature matrix
+    # convert test windows into features
     X_test = windows_to_matrix(test_windows)
 
-    # compute distances to nearest normal point
-    distances, _ = model.kneighbors(X_test)
+    # scale test data using training statistics
+    X_test = normalise_test(X_test)
 
-    # flatten distances array
+    # compare test points to the normal training data
+    test_knn = NearestNeighbors(n_neighbors=1)
+    test_knn.fit(model._fit_X)
+
+    distances, _ = test_knn.kneighbors(X_test)
+
     distances = distances.flatten()
 
-    # if distance > threshold → anomaly
+    # if the distance is larger than the threshold
+    # we mark it as an anomaly
     predictions = (distances > threshold).astype(int)
 
     # 1 = anomaly, 0 = normal
