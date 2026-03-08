@@ -1,4 +1,3 @@
 log.txt
+
 Backend/sample_data/
-*.csv
-Backend/anomaly-detection/fix_columns.py
