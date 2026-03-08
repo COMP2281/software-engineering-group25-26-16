@@ -115,11 +115,11 @@ def train_knn(anomalous, normal):
     train_data = np.array(anomalous + normal)
     print(f"Training KNN with {len(anomalous)} anomalous samples and {len(normal)} normal samples ({len(train_data)} total)...")
 
-    model = svm.SVC()
-    model.fit(train_data, np.array([True] * len(anomalous) + [False] * len(normal)))
-
-    # model = KNeighborsClassifier()
+    # model = svm.SVC()
     # model.fit(train_data, np.array([True] * len(anomalous) + [False] * len(normal)))
+
+    model = KNeighborsClassifier()
+    model.fit(train_data, np.array([True] * len(anomalous) + [False] * len(normal)))
     return model
 
 def test_knn(knn, anomalous, normal):
