@@ -52,9 +52,8 @@ def clean_data(df, window_size=5):
 
     return windows
 
-from sklearn.neighbors import NearestNeighbors
 
-
+#Start of the classifier code
 from sklearn.neighbors import NearestNeighbors
 
 
