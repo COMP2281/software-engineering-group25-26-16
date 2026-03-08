@@ -38,6 +38,24 @@ for file in range(num_anomalous + 1, num_files + 1):
     windows = clean_data(df)
     normal.append(windows)
 
+num_drive_files = 13
+num_anomalous_drive = int(num_drive_files * ratio_anomaly)
+
+# build anomalous dataset for drive files
+for file in range(1, num_anomalous_drive + 1):
+    print(f"Processing anomalous drive file {file}...")
+    df = load_data_frame(f"../sample_data/drive{file}.csv")
+    df = add_noise_for_engine_coolant_temperature(df, snr_db=20, alpha=1.0, random_state=42)
+    windows = clean_data(df)
+    anomalous.append(windows)
+
+# build normal dataset for drive files
+for file in range(num_anomalous_drive + 1, num_drive_files + 1):
+    print(f"Processing normal drive file {file}...")
+    df = load_data_frame(f"../sample_data/drive{file}.csv")
+    windows = clean_data(df)
+    normal.append(windows)
+
 # use most normal files for training
 train_normal = np.concatenate(normal[:-1], axis=0)
 
