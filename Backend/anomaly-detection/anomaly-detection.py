@@ -157,7 +157,7 @@ if __name__ == "__main__":
         anomalous_data.extend(process_file(f"../sample_data/idle{file}.csv", anomalous=True))
 
     # normal data (idle)
-    for file in range(int(num_files_idle * ratio_anomaly), num_files_idle + 1):
+    for file in range(int(num_files_idle * ratio_anomaly) + 1, num_files_idle + 1):
         normal_data.extend(process_file(f"../sample_data/idle{file}.csv", anomalous=False))
 
 
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         anomalous_data.extend(process_file(f"../sample_data/drive{file}.csv", anomalous=True))
 
     # normal data (drive)
-    for file in range(int(num_files_drive * ratio_anomaly), num_files_drive + 1):
+    for file in range(int(num_files_drive * ratio_anomaly) + 1, num_files_drive + 1):
         normal_data.extend(process_file(f"../sample_data/drive{file}.csv", anomalous=False))
 
     anomalous_train = anomalous_data[:int(len(anomalous_data) * (1 - ratio_test))]
