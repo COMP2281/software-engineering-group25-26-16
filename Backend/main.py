@@ -10,10 +10,14 @@ Docs at:   http://localhost:8000/docs  (Swagger UI)
 
 import os
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from database import get_db
 
 from routes import upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
+
+from services import auth_service
 from middleware.error_handler import register_error_handlers
 from middleware.security import SecurityHeadersMiddleware
 from middleware.rate_limiter import register_rate_limiter
@@ -34,7 +38,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# ── Middleware stack (order matters: last added = first executed) ─
+# ── Middleware stack ─────────────────────────────────────────────
 # 1. CORS
 app.add_middleware(
     CORSMiddleware,
@@ -43,11 +47,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# 2. Security headers (helmet equivalent)
+# 2. Security headers
 app.add_middleware(SecurityHeadersMiddleware)
-# 3. Request logging (method + url + status + duration)
+# 3. Request logging
 app.add_middleware(RequestLoggerMiddleware)
-# 4. Rate limiting (200 req/min per IP)
+# 4. Rate limiting
 register_rate_limiter(app)
 
 # ── Error handlers ───────────────────────────────────────────────
@@ -57,13 +61,39 @@ register_error_handlers(app)
 os.makedirs("./uploaded_data", exist_ok=True)
 os.makedirs("./logs", exist_ok=True)
 
-# ── Mount routers ────────────────────────────────────────────────
+# ── AUTH ROUTES ─────────────────────────────────────
+@app.post("/auth/register", tags=["Authentication"])
+async def register(
+    username: str, 
+    email: str, 
+    password: str,
+    db: Session = Depends(get_db)
+):
+    """Register a new user"""
+    return await auth_service.register_user(username, email, password, db)
+
+@app.post("/auth/login", tags=["Authentication"])
+async def login(
+    username: str, 
+    password: str,
+    db: Session = Depends(get_db)
+):
+    """Login and get JWT token"""
+    return await auth_service.login_user(username, password, db)
+
+@app.get("/auth/me", tags=["Authentication"])
+async def get_current_user(
+    current_user = Depends(auth_service.get_current_user)
+):
+    """Get current user info"""
+    return current_user
+
+# ── Mount their routers ──────────────────────────────────────────
 app.include_router(upload_routes.router)
 app.include_router(data_routes.router)
 app.include_router(diagnostics_routes.router)
 app.include_router(alert_routes.router)
 app.include_router(granite_routes.router)
-
 
 # ── Health check ─────────────────────────────────────────────────
 @app.get("/", tags=["Health"])
@@ -74,7 +104,6 @@ async def health_check():
         "service": "Granite Guardian API",
         "version": "1.0.0",
     }
-
 
 @app.get("/health", tags=["Health"])
 async def health():
@@ -95,3 +124,6 @@ async def health():
         "granite_available": granite_available,
         "uploaded_files": len(files),
     }
+
+
+
