@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Shield, Mail, Lock, ArrowRight } from 'lucide-react';
-import '../styles/index.css';
+import { Shield, Mail, Lock, ArrowRight, User } from 'lucide-react';
+import '../styles/index.css'; // Uses the exact same CSS we wrote earlier!
 
 export default function Index() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+
+  // Our three pieces of form data
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,21 +17,27 @@ export default function Index() {
     e.preventDefault();
     setError('');
 
-    // Sending to Caddy on port 8080 (which forwards to FastAPI)
-    const endpoint = isLogin ? '/api/login' : '/api/signup';
+    // Assuming your Caddy server routes /api to your FastAPI backend.
+    // If it doesn't use the /api prefix, just change these to '/auth/login' and '/auth/register'
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+
+    // If logging in, we only send email and password. If signing up, we send all three.
+    const payload = isLogin
+      ? { email, password }
+      : { username, email, password };
 
     try {
-      // For now, if you just want to test the UI without the backend,
-      // you can comment out the fetch and just use: navigate('/dashboard');
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
+        // Success! Send them into the app.
         navigate('/dashboard');
       } else {
+        // Handle incorrect passwords or taken usernames
         const data = await response.json();
         setError(data.detail || 'Authentication failed. Please try again.');
       }
@@ -63,20 +72,40 @@ export default function Index() {
           {error && <div className="auth_error">{error}</div>}
 
           <form onSubmit={handleSubmit} className="auth_form">
+
+            {/* USERNAME FIELD: Always visible */}
             <div className="input_group">
-              <label>Email</label>
+              <label>Username</label>
               <div className="input_wrapper">
-                <Mail size={18} className="input_icon" />
+                <User size={18} className="input_icon" />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g. mechanic_mike"
                 />
               </div>
             </div>
 
+            {/* EMAIL FIELD: Only shows up if they are Creating an Account */}
+            {!isLogin && (
+              <div className="input_group fade_in">
+                <label>Email</label>
+                <div className="input_wrapper">
+                  <Mail size={18} className="input_icon" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* PASSWORD FIELD: Always visible */}
             <div className="input_group">
               <label>Password</label>
               <div className="input_wrapper">
@@ -97,14 +126,22 @@ export default function Index() {
             </button>
           </form>
 
+          {/* TOGGLE BUTTON */}
           <div className="auth_switch">
             <p>
               {isLogin ? "Don't have an account? " : "Already have an account? "}
-              <button type="button" onClick={() => setIsLogin(!isLogin)}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError(''); // Clears out any red error boxes when switching views
+                }}
+              >
                 {isLogin ? 'Sign up' : 'Log in'}
               </button>
             </p>
           </div>
+
         </div>
       </div>
 

@@ -70,7 +70,7 @@ class RegisterRequest(BaseModel):
     password: str
 
 class LoginRequest(BaseModel):
-    username: str
+    email: str
     password: str
 
 @app.post("/auth/register", tags=["Authentication"])
@@ -79,7 +79,7 @@ async def register(user: RegisterRequest, db: Session = Depends(get_db)):
 
 @app.post("/auth/login", tags=["Authentication"])
 async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
-    return await auth_service.login_user(credentials.username, credentials.password, db)
+    return await auth_service.login_user(credentials.email, credentials.password, db)
 
 
 @app.get("/auth/me", tags=["Authentication"])
