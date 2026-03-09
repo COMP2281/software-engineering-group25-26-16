@@ -62,24 +62,25 @@ os.makedirs("./uploaded_data", exist_ok=True)
 os.makedirs("./logs", exist_ok=True)
 
 # ── AUTH ROUTES ─────────────────────────────────────
+from pydantic import BaseModel
+
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
 @app.post("/auth/register", tags=["Authentication"])
-async def register(
-    username: str, 
-    email: str, 
-    password: str,
-    db: Session = Depends(get_db)
-):
-    """Register a new user"""
-    return await auth_service.register_user(username, email, password, db)
+async def register(user: RegisterRequest, db: Session = Depends(get_db)):
+    return await auth_service.register_user(user.username, user.email, user.password, db)
 
 @app.post("/auth/login", tags=["Authentication"])
-async def login(
-    username: str, 
-    password: str,
-    db: Session = Depends(get_db)
-):
-    """Login and get JWT token"""
-    return await auth_service.login_user(username, password, db)
+async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
+    return await auth_service.login_user(credentials.username, credentials.password, db)
+
 
 @app.get("/auth/me", tags=["Authentication"])
 async def get_current_user(
