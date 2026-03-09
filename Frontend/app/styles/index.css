@@ -1,98 +1,190 @@
-.welcome_container {
+/* Main Layout */
+.index_container {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #ffffff;
+}
+
+/* Left Side: Hero Brand */
+.index_hero {
+  flex: 1;
+  background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background-color: var(--bg-main);
+  padding: 3rem;
+  box-shadow: 4px 2px 2px 15px rgba(0, 0, 0, 0.8);
+
 }
 
-.welcome_card {
-  background-color: white;
-  padding: 40px;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+.hero_content {
+  max-width: 400px;
+}
+
+.hero_icon {
+  margin-bottom: 1.5rem;
+  color: #93c5fd;
+}
+
+.hero_title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.hero_subtitle {
+  font-size: 1.125rem;
+  color: #bfdbfe;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Right Side: Auth Form */
+.index_auth {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #f8fafc;
+
+}
+
+.auth_card {
   width: 100%;
   max-width: 400px;
-  text-align: center;
+  background: white;
+  padding: 2.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
-.welcome_card h1 {
-  color: var(--primary-color);
-  font-size: var(--font-size-xl);
-  margin-bottom: 5px;
+.auth_card h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
+  color: #0f172a;
 }
 
-.welcome_card h2 {
-  color: var(--text-primary);
-  font-size: var(--font-size-lg);
-  margin-bottom: 30px;
-  font-weight: normal;
+.auth_description {
+  color: #64748b;
+  margin: 0 0 2rem 0;
+  font-size: 0.95rem;
+}
+
+/* Form Elements */
+.auth_error {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  border: 1px solid #fecaca;
 }
 
 .auth_form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  text-align: left;
+  gap: 1.25rem;
 }
 
-.form_group {
+.input_group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
-.form_group label {
-  font-size: var(--font-size-sm);
-  color: var(--secondary-text);
-  font-weight: bold;
+.input_group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
 }
 
-.form_group input {
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-md);
+.input_wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.form_group input:focus {
+.input_icon {
+  position: absolute;
+  left: 1rem;
+  color: #94a3b8;
+}
+
+.input_wrapper input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 1rem;
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(15, 98, 254, 0.2);
+  transition: all 0.2s;
 }
 
-.auth_button {
-  background-color: var(--primary-color);
+.input_wrapper input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.auth_submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #2563eb;
   color: white;
+  padding: 0.875rem;
   border: none;
-  padding: 14px;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-md);
-  font-weight: bold;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 10px;
+  transition: background-color 0.2s;
+  margin-top: 0.5rem;
 }
 
-.auth_button:hover {
-  background-color: var(--darker-primary-color);
+.auth_submit:hover {
+  background-color: #1d4ed8;
 }
 
-.auth_toggle {
-  margin-top: 25px;
-  font-size: var(--font-size-sm);
-  color: var(--secondary-text);
+/* Toggle Switch */
+.auth_switch {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
 }
 
-.toggle_button {
+.auth_switch button {
   background: none;
   border: none;
-  color: var(--primary-color);
-  font-weight: bold;
+  color: #2563eb;
+  font-weight: 600;
   cursor: pointer;
   padding: 0;
-  font-size: inherit;
 }
 
-.toggle_button:hover {
+.auth_switch button:hover {
   text-decoration: underline;
+}
+
+/* Responsive: Stack on mobile */
+@media (max-width: 768px) {
+  .index_container {
+    flex-direction: column;
+  }
+  .index_hero {
+    padding: 3rem 1.5rem;
+    text-align: center;
+  }
+  .hero_content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
