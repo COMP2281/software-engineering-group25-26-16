@@ -64,9 +64,9 @@ async def register_user(username: str, email: str, password: str, db: Session = 
     }
 
 # Login user
-async def login_user(username: str, password: str, db: Session = Depends(get_db)):
+async def login_user(email: str, password: str, db: Session = Depends(get_db)):
     # Find user
-    user = user_service.get_user_by_username(db, username)
+    user = user_service.get_user_by_email(db, email)
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
