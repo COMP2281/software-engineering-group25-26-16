@@ -1,15 +1,16 @@
-/* --- Main Container --- */
+/* --- Base Variables --- */
 .chatbot_page_container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  background-color: #f8fafc;
+  background-color: var(--bg-main);
   position: relative;
   overflow: hidden;
+  font-family: 'Inter', sans-serif;
 }
 
-/* --- Header & Animations --- */
+/* --- Header & Centering Animations --- */
 .chatbot_header {
   display: flex;
   flex-direction: column;
@@ -18,17 +19,11 @@
   transition: all 0.7s ease-in-out;
 }
 
-/* When the chat hasn't started yet */
+/* This is what was missing to center the title! */
 .chatbot_header.centered {
-  margin-top: 35vh;
+  margin-top: 35vh; 
 }
 
-.chatbot_header.centered .chatbot_main_title {
-  font-size: 4rem !important; /* Forces it to stay big initially */
-  margin-bottom: 2rem;
-}
-
-/* When the chat has started (Moves to top) */
 .chatbot_header.started {
   margin-top: 0;
   padding-top: 1.5rem;
@@ -38,15 +33,21 @@
   flex-shrink: 0;
 }
 
-.chatbot_header.started .chatbot_main_title {
-  font-size: 1.8rem !important; /* Shrinks the text */
-  margin-bottom: 0;
+.chatbot_main_title {
+  font-weight: 800;
+  color: var(--text-primary);
+  transition: all 0.7s ease-in-out;
+  letter-spacing: -1px;
 }
 
-.chatbot_main_title {
-  font-weight: bold;
-  color: #1e293b;
-  transition: all 0.7s ease-in-out;
+.chatbot_header.centered .chatbot_main_title {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chatbot_header.started .chatbot_main_title {
+  font-size: 1.5rem;
+  margin-bottom: 0;
 }
 
 /* --- Search Bars --- */
@@ -60,30 +61,27 @@
   position: relative;
   display: flex;
   align-items: center;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-radius: 9999px;
-  background-color: white;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px; /* Rounded pill shape */
+  box-shadow: var(--shadow-md);
 }
 
 .search_input {
   width: 100%;
   padding: 1.25rem 4rem 1.25rem 1.5rem;
   border-radius: 9999px;
-  border: 1px solid #cbd5e1;
-  font-size: 1.125rem;
+  border: none;
+  font-size: 1rem;
   outline: none;
-  transition: box-shadow 0.2s;
-}
-
-.search_input:focus {
-  box-shadow: 0 0 0 2px #2563eb;
+  color: var(--text-primary);
 }
 
 .send_button {
   position: absolute;
   right: 0.5rem;
   padding: 0.75rem;
-  background-color: #2563eb;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 50%;
@@ -91,14 +89,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .send_button:hover {
-  background-color: #1d4ed8;
+  background-color: var(--darker-primary-color);
+  transform: scale(1.05);
 }
 
-/* Bottom Search Bar specific tweaks */
+/* Bottom Search Bar */
 .chatbot_bottom_search {
   padding: 1rem;
   background-color: white;
@@ -109,16 +108,10 @@
 .bottom_wrapper {
   max-width: 50rem;
   margin: 0 auto;
-  box-shadow: none;
 }
 
 .bottom_input {
-  background-color: #f1f5f9;
   padding: 1rem 3.5rem 1rem 1.5rem;
-}
-
-.bottom_send {
-  padding: 0.6rem;
 }
 
 /* --- Chat History Area --- */
@@ -140,6 +133,7 @@
 .message_row {
   display: flex;
   gap: 1rem;
+  animation: fadeIn 0.4s ease;
 }
 
 .message_row.user {
@@ -156,37 +150,33 @@
   flex-shrink: 0;
 }
 
-.message_avatar.user { background-color: #2563eb; }
-.message_avatar.bot { background-color: #1e293b; }
+.message_avatar.user { background-color: var(--primary-color); }
+.message_avatar.bot { background-color: white; border: 1px solid #e2e8f0; }
 
 .message_bubble {
   padding: 1rem 1.25rem;
-  font-size: 1.1rem;
+  font-size: 1rem;
   max-width: 80%;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
+  line-height: 1.5;
 }
 
 .message_bubble.user {
-  background-color: #2563eb;
+  background-color: var(--primary-color);
   color: white;
-  border-radius: 1rem 1rem 0 1rem;
+  border-radius: 1.5rem 1.5rem 0 1.5rem;
 }
 
 .message_bubble.bot {
   background-color: white;
   border: 1px solid #e2e8f0;
-  color: #1e293b;
-  border-radius: 1rem 1rem 1rem 0;
+  color: var(--text-primary);
+  border-radius: 1.5rem 1.5rem 1.5rem 0;
 }
 
 /* --- Animations --- */
-.fade_in {
-  animation: fadeIn 1s ease-in forwards;
-}
-
-.fade_in_up {
-  animation: fadeInUp 0.5s ease-out forwards;
-}
+.fade_in { animation: fadeIn 0.8s ease forwards; }
+.fade_in_up { animation: fadeInUp 0.5s ease-out forwards; }
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -194,12 +184,6 @@
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
