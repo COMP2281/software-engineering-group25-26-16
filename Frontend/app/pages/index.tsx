@@ -1,25 +1,24 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { Shield, Mail, Lock, ArrowRight, User } from 'lucide-react';
-import '../styles/index.css'; // Uses the exact same CSS we wrote earlier!
+import React, { useState } from "react";
+import { useNavigate } from "react-router";
+import { Shield, Mail, Lock, ArrowRight, User } from "lucide-react";
+import "../styles/index.css"; // Uses the exact same CSS we wrote earlier!
 
 export default function Index() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
 
   // Our three pieces of form data
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    // Assuming your Caddy server routes /api to your FastAPI backend.
-    // If it doesn't use the /api prefix, just change these to '/auth/login' and '/auth/register'
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    // Assuming your Caddy server routes to your FastAPI backend.
+    const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
 
     // If logging in, we only send email and password. If signing up, we send all three.
     const payload = isLogin
@@ -28,35 +27,36 @@ export default function Index() {
 
     try {
       const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         // Success! Send them into the app.
-        navigate('/dashboard');
+        navigate("/dashboard");
       } else {
         // Handle incorrect passwords or taken usernames
         const data = await response.json();
-        setError(data.detail || 'Authentication failed. Please try again.');
+        setError(data.detail || "Authentication failed. Please try again.");
       }
     } catch (err) {
-      setError('Cannot connect to the server. Make sure Caddy and FastAPI are running!');
+      setError(
+        "Cannot connect to the server. Make sure Caddy and FastAPI are running!",
+      );
     }
   };
 
   return (
     <div className="index_container">
-
       {/* LEFT SIDE: Branding & Hero */}
       <div className="index_hero">
         <div className="hero_content">
           <Shield size={64} className="hero_icon" />
           <h1 className="hero_title">Granite Guardian</h1>
           <p className="hero_subtitle">
-            Your intelligent, secure, and AI-powered data companion.
-            Sign in to access your dashboard and start chatting.
+            Your intelligent, secure, and AI-powered data companion. Sign in to
+            access your dashboard and start chatting.
           </p>
         </div>
       </div>
@@ -64,15 +64,16 @@ export default function Index() {
       {/* RIGHT SIDE: Auth Form */}
       <div className="index_auth">
         <div className="auth_card">
-          <h2>{isLogin ? 'Welcome back' : 'Create an account'}</h2>
+          <h2>{isLogin ? "Welcome back" : "Create an account"}</h2>
           <p className="auth_description">
-            {isLogin ? 'Enter your details to access your account.' : 'Sign up to get started with Granite Guardian.'}
+            {isLogin
+              ? "Enter your details to access your account."
+              : "Sign up to get started with Granite Guardian."}
           </p>
 
           {error && <div className="auth_error">{error}</div>}
 
           <form onSubmit={handleSubmit} className="auth_form">
-
             {/* USERNAME FIELD: Always visible */}
             <div className="input_group">
               <label>Username</label>
@@ -121,7 +122,7 @@ export default function Index() {
             </div>
 
             <button type="submit" className="auth_submit">
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {isLogin ? "Sign In" : "Create Account"}
               <ArrowRight size={18} />
             </button>
           </form>
@@ -129,22 +130,23 @@ export default function Index() {
           {/* TOGGLE BUTTON */}
           <div className="auth_switch">
             <p>
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              {isLogin
+                ? "Don't have an account? "
+                : "Already have an account? "}
               <button
                 type="button"
                 onClick={() => {
                   setIsLogin(!isLogin);
-                  setError(''); // Clears out any red error boxes when switching views
+                  setError(""); // Clears out any red error boxes when switching views
                 }}
               >
-                {isLogin ? 'Sign up' : 'Log in'}
+                {isLogin ? "Sign up" : "Log in"}
               </button>
             </p>
           </div>
-
         </div>
       </div>
-
     </div>
   );
 }
+

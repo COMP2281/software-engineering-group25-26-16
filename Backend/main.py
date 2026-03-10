@@ -17,6 +17,7 @@ from database import get_db
 import ollama
 from fastapi import Body
 from routes import upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
+from pydantic import BaseModel
 
 from services import auth_service
 from middleware.error_handler import register_error_handlers
@@ -63,15 +64,20 @@ os.makedirs("./uploaded_data", exist_ok=True)
 os.makedirs("./logs", exist_ok=True)
 
 #  AUTH ROUTES 
+# use pydantic here
+class UserRegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
 @app.post("/auth/register", tags=["Authentication"])
 async def register(
-    username: str, 
-    email: str, 
-    password: str,
+    req: UserRegisterRequest,
     db: Session = Depends(get_db)
 ):
     """Register a new user"""
-    return await auth_service.register_user(username, email, password, db)
+    return await auth_service.register_user(req.username, req.email, req.password, db)
 
 @app.post("/auth/login", tags=["Authentication"])
 async def login(

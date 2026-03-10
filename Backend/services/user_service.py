@@ -24,6 +24,7 @@ def get_user_by_id(db: Session, user_id: int):
 def create_user(db: Session, username: str, email: str, password: str):
     """Create a new user"""
     hashed_password = pwd_context.hash(password)
+
     db_user = User(
         username=username,
         email=email,

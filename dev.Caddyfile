@@ -20,8 +20,9 @@
 http://localhost:8080 {
     import cors {header.origin}
     reverse_proxy /* localhost:5173
-}
-http://api.localhost:8080 {
-    import cors {header.origin}
-    reverse_proxy /* localhost:8000
+
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy /* localhost:8000
+    }
 }

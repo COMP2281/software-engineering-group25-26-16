@@ -18,8 +18,15 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+initialised = False
+
 # Dependency to get DB session
 def get_db():
+    global initialised
+    if not initialised:
+        Base.metadata.create_all(bind=engine)  # Create tables if they don't exist
+        initialised = True
+
     db = SessionLocal()
     try:
         yield db

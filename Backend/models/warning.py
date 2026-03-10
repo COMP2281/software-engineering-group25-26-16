@@ -5,7 +5,6 @@ Warning models for different anomaly types detected in OBD-II data.
 import json
 from enum import Enum
 
-
 class Severity(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
