@@ -7,7 +7,11 @@ Mounts all route modules and registers middleware.
 Run with:  uvicorn main:app --reload
 Docs at:   http://localhost:8000/docs  (Swagger UI)
 """
-
+from database import Base, engine
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import desc
+from models.chat import ChatSession, ChatMessage
 import os
 import logging
 from fastapi import FastAPI, Depends
@@ -15,7 +19,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import get_db
 import ollama
-from fastapi import Body
 from routes import upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
 from pydantic import BaseModel
 from services import user_service
@@ -49,7 +52,8 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],# tighten for production
+    # Use your real frontend URL here
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,7 +120,9 @@ async def login(
         value=token,
         httponly=True,
         samesite="lax",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        secure=False,  # Set to True in production with HTTPS
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/"
     );
 
     return {
@@ -131,6 +137,226 @@ async def get_current_user(
     """Get current user info"""
     return current_user
 
+class CreateChatSessionRequest(BaseModel):
+    # Optional title for a new chat session
+    title: Optional[str] = "New Chat"
+
+
+class ChatRequest(BaseModel):
+    # Which saved chat session this message belongs to
+    session_id: int
+
+    # New message typed by the user
+    message: str
+
+
+@app.post("/chat/sessions", tags=["AI Chatbot"])
+async def create_chat_session(
+    payload: CreateChatSessionRequest,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth_service.get_current_user)
+):
+    # Create a new empty chat linked to the current user
+    new_session = ChatSession(
+        user_id=current_user.id,
+        title=(payload.title or "New Chat").strip() or "New Chat",
+        created_at=datetime.utcnow()
+    )
+
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+
+    return {
+        "id": new_session.id,
+        "title": new_session.title,
+        "created_at": new_session.created_at
+    }
+
+
+@app.get("/chat/sessions", tags=["AI Chatbot"])
+async def get_chat_sessions(
+    db: Session = Depends(get_db),
+    current_user = Depends(auth_service.get_current_user)
+):
+    # Return only chats that belong to the logged-in user
+    sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.user_id == current_user.id)
+        .order_by(desc(ChatSession.created_at))
+        .all()
+    )
+
+    return [
+        {
+            "id": session.id,
+            "title": session.title,
+            "created_at": session.created_at
+        }
+        for session in sessions
+    ]
+
+
+@app.get("/chat/sessions/{session_id}/messages", tags=["AI Chatbot"])
+async def get_chat_messages(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth_service.get_current_user)
+):
+    # Make sure the user is only allowed to read their own chat
+    session = (
+        db.query(ChatSession)
+        .filter(
+            ChatSession.id == session_id,
+            ChatSession.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+
+    messages = (
+        db.query(ChatMessage)
+        .filter(ChatMessage.session_id == session_id)
+        .order_by(ChatMessage.created_at.asc())
+        .all()
+    )
+
+    return [
+        {
+            "id": msg.id,
+            "role": "bot" if msg.role == "assistant" else msg.role,
+            "content": msg.content,
+            "created_at": msg.created_at
+        }
+        for msg in messages
+    ]
+
+@app.delete("/chat/sessions/{session_id}", tags=["AI Chatbot"])
+async def delete_chat_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth_service.get_current_user)
+):
+    """
+    Deletes an entire chat session.
+
+    Because ChatSession has cascade="all, delete-orphan",
+    deleting the session automatically deletes all messages
+    linked to it.
+    """
+
+    # First make sure the session exists and belongs to this user
+    session = (
+        db.query(ChatSession)
+        .filter(
+            ChatSession.id == session_id,
+            ChatSession.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+
+    # Delete the chat session
+    db.delete(session)
+    db.commit()
+
+    return {"message": "Chat deleted successfully"}
+
+@app.post("/chat", tags=["AI Chatbot"])
+async def chat_with_granite(
+    payload: ChatRequest,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth_service.get_current_user)
+):
+    user_message = payload.message.strip()
+
+    # Reject blank messages
+    if not user_message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    # Check that the selected session belongs to the current user
+    session = (
+        db.query(ChatSession)
+        .filter(
+            ChatSession.id == payload.session_id,
+            ChatSession.user_id == current_user.id
+        )
+        .first()
+    )
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+
+    try:
+        # Save the user's message into the database
+        user_msg = ChatMessage(
+            session_id=session.id,
+            role="user",
+            content=user_message,
+            created_at=datetime.utcnow()
+        )
+        db.add(user_msg)
+        db.commit()
+
+        # Load chat history so the model can remember context
+        history = (
+            db.query(ChatMessage)
+            .filter(ChatMessage.session_id == session.id)
+            .order_by(ChatMessage.created_at.asc())
+            .all()
+        )
+
+        # Keep the context smaller so the tiny model stays responsive
+        recent_history = history[-12:]
+
+        ollama_messages = [
+            {
+                "role": "system",
+                "content": "You are Granite Guardian, a professional automotive expert. Explain OBD-II data simply."
+            }
+        ]
+
+        for msg in recent_history:
+            ollama_messages.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+
+        response = ollama.chat(
+            model="granite4:350m",
+            messages=ollama_messages
+        )
+
+        assistant_reply = response["message"]["content"]
+
+        # Save the assistant reply too
+        assistant_msg = ChatMessage(
+            session_id=session.id,
+            role="assistant",
+            content=assistant_reply,
+            created_at=datetime.utcnow()
+        )
+        db.add(assistant_msg)
+
+        # Rename the chat after the first real message
+        if session.title == "New Chat":
+            words = user_message.split()
+            session.title = " ".join(words[:6]) if words else "New Chat"
+
+        db.commit()
+
+        return {
+            "reply": assistant_reply,
+            "session_id": session.id
+        }
+
+    except Exception as e:
+        print(f"OLLAMA CRASH REASON: {str(e)}")
+        return {"reply": f"Granite Connection Error: {str(e)}"}
 
 
 # Mount their routers
@@ -150,25 +376,5 @@ async def health_check():
         "version": "1.0.0",
     }
 
-@app.post("/chat", tags=["AI Chatbot"])
-async def chat_with_granite(payload: dict = Body(...)):
-    user_message = payload.get("message")
-    
-    try:
-        response = ollama.chat(model='granite4:350m', messages=[
-            {
-                'role': 'system',
-                'content': 'You are Granite Guardian, a professional automotive expert. Explain OBD-II data simply.'
-            },
-            {
-                'role': 'user',
-                'content': user_message
-            }
-        ])
-        return {"reply": response['message']['content']}
-        
-    except Exception as e:
-        print(f"OLLAMA CRASH REASON: {str(e)}")
-        # This will show the exact error in your Chatbot UI
-        return {"reply": f"Granite Connection Error: {str(e)}"}
+
 
