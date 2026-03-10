@@ -274,13 +274,13 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="chatbot_page_container chatbot_layout">
+    <div className="chatbot_page_container" style={{ display: 'flex', gap: '20px' }}>
       <aside className="chat_sidebar">
         <button
           onClick={createNewChat}
+          className="new_chat_button"
           aria-label="Create new chat"
           title="Create new chat"
-          className="new_chat_button"
         >
           <Plus size={18} />
           <span>New Chat</span>
@@ -291,20 +291,18 @@ export default function Chatbot() {
             <div key={session.id} className="chat_session_row">
               <button
                 onClick={() => loadMessages(session.id)}
+                className={`chat_session_button ${session.id === activeSessionId ? 'active' : ''}`}
                 aria-label={`Open chat ${session.title}`}
                 title={session.title}
-                className={`chat_session_button ${
-                  session.id === activeSessionId ? 'active' : ''
-                }`}
               >
                 <span className="chat_session_title">{session.title}</span>
               </button>
 
               <button
                 onClick={() => deleteChat(session.id)}
+                className="delete_chat_button"
                 aria-label={`Delete chat ${session.title}`}
                 title="Delete chat"
-                className="delete_chat_button"
               >
                 <Trash2 size={16} />
               </button>
@@ -313,7 +311,7 @@ export default function Chatbot() {
         </div>
       </aside>
 
-      <div className="chat_main_area">
+      <div style={{ flex: 1 }}>
         <div className={`chatbot_header ${hasStarted ? 'started' : 'centered'}`}>
           <h1 className="chatbot_main_title">
             Granite <span style={{ color: 'var(--primary-color)' }}>Guardian</span>
