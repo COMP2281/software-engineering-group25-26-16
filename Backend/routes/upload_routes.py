@@ -8,14 +8,16 @@ from services import upload_service
 from services import diagnostics_service
 from services.auth_service import get_current_user
 from fastapi import Depends
+from sqlalchemy.orm import Session
+from database import get_db
 
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
 
 @router.post("/upload", status_code=201)
-async def upload_file(file: UploadFile, user = Depends(get_current_user)):
+async def upload_file(file: UploadFile, user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Upload a CSV file containing OBD-II sensor data. Returns 201 on success."""
-    await upload_service.save_upload(user.id, file)
+    await upload_service.save_upload(user.id, file, db)
 
     return {
         "message": "File uploaded successfully.",
@@ -35,10 +37,10 @@ async def upload_file(file: UploadFile, user = Depends(get_current_user)):
 
 
 @router.get("/list")
-async def list_uploads(user = Depends(get_current_user)):
+async def list_uploads(user = Depends(get_current_user), db: Session = Depends(get_db)):
     """List all uploaded CSV files."""
-    files = upload_service.list_uploaded_files(user.id)
-    return {"files": files, "count": len(files)}
+    files = upload_service.get_uploaded_files(user.id, db)
+    return {"files": files}
 
 
 @router.delete("/{filename}")

@@ -26,10 +26,10 @@ class AnomalyDetectionModel():
 
 # for testing purposes only
 # if __name__ == "__main__":
-#     model = AnomalyDetectionModel()
-#     # warnings = model.generate_warnings(f"../sample_data/idle1test.csv")
-#     # for warning in warnings:
-#     #     print(warning.to_dict())
+    # model = AnomalyDetectionModel("sample_data/")
+    # warnings = model.generate_warnings(f"../sample_data/idle1test.csv")
+    # for warning in warnings:
+    #     print(warning.to_dict())
 
 
 

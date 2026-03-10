@@ -24,6 +24,8 @@ from services.validators import validate_filename, require_file_exists
 from services.data_service import get_csv_as_dataframe
 from anomaly_detection.anomaly_detection import AnomalyDetectionModel
 
+from models.upload import UploadedFile, FileWarning
+
 # Sensors that the user has disabled (e.g. malfunctioning)
 _disabled_sensors: set[str] = set()
 
@@ -148,6 +150,7 @@ def run_diagnostics(filename: str, force_rescan: bool = False) -> dict:
     Always either writes/updates the log file OR raises an HTTPException.
     Caches results to log files; use force_rescan=True to re-run.
     """
+    
 
     # filename = validate_filename(filename)
     # require_file_exists(filename)

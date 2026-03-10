@@ -34,7 +34,8 @@ def get_db():
     global initialised
 
     if not initialised:
-        Base.metadata.create_all(bind=engine)
+        print("Creating the database")
+        Base.metadata.create_all(bind=engine)  # Create tables if they don't exist
         initialised = True
 
     db = SessionLocal()

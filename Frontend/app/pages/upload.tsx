@@ -11,13 +11,21 @@ import "../styles/dashboard.css";
 
 interface Warning {
   run_time: string;
+  severity: string;
+  type: string;
   message: string;
 }
 
+interface File {
+  user_id: number;
+  filename: string;
+  id: number;
+}
+
 export default function Upload() {
-  const [files, setFiles] = useState<string[] | null>(null);
+  const [files, setFiles] = useState<File[] | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
   const [warnings, setWarnings] = useState<Warning[]>([]);
 
   useEffect(() => {
@@ -52,6 +60,22 @@ export default function Upload() {
       if (response.ok) fetchFiles();
     } catch (error) {
       console.error("Upload failed:", error);
+    }
+  };
+
+  const run_diagnostics = async () => {
+    if (!selectedFileId) return;
+    try {
+      const response = await fetch(`/api/diagnostics/${selectedFileId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWarnings(data);
+      }
+    } catch (error) {
+      console.error("Diagnostics failed:", error);
     }
   };
 
@@ -133,7 +157,7 @@ export default function Upload() {
           ) : (
             files.map((file) => (
               <div
-                key={file}
+                key={file.id}
                 className="summary_card"
                 style={{
                   transition: "transform 0.2s ease",
@@ -151,7 +175,7 @@ export default function Upload() {
                   (e.currentTarget.style.transform = "translateY(0)")
                 }
                 onClick={() => {
-                  setSelectedFile(file);
+                  setSelectedFileId(file.id);
                   setSidebarVisible(true);
                 }}
               >
@@ -172,7 +196,7 @@ export default function Upload() {
                       color: "var(--text-primary)",
                     }}
                   >
-                    {file}
+                    {file.filename}
                   </h4>
                   <span
                     className="badge_component"
@@ -207,8 +231,10 @@ export default function Upload() {
           Granite Insights
         </h2>
         <p style={{ color: "var(--light-text)", marginBottom: "30px" }}>
-          Log File: {selectedFile}
+          Log File: {selectedFileId}
         </p>
+
+        <Button onClick={run_diagnostics}>Run Diagnostics</Button>
 
         <DataTable value={warnings} className="p-datatable-sm" stripedRows>
           <Column

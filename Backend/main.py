@@ -72,12 +72,6 @@ register_error_handlers(app)
 os.makedirs("./uploaded_data", exist_ok=True)
 os.makedirs("./logs", exist_ok=True)
 
-# ML model
-model = AnomalyDetectionModel("sample_data/")
-
-def get_model():
-    return model
-
 #  AUTH ROUTES 
 class UserRegisterRequest(BaseModel):
     username: str

@@ -17,11 +17,20 @@ class BaseWarning():
     def message(self) -> str:
         return "Unknown diagnostic warning."
 
+    def run_time(self) -> float:
+        return self._run_time
+
+    def severity(self) -> Severity:
+        return self._severity
+
+    def type(self) -> str:
+        return self.__class__.__name__
+
     def to_dict(self) -> dict:
         return {
-            "run_time": self._run_time,
-            "severity": self._severity.value,
-            "type": self.__class__.__name__,
+            "run_time": self.run_time(),
+            "severity": self.severity().value,
+            "type": self.type(),
             "message": self.message(),
         }
 

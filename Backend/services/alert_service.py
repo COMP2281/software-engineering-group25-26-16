@@ -7,7 +7,7 @@ import os
 from fastapi import HTTPException
 from config import LOG_FOLDER
 from services.validators import validate_filename
-from services.upload_service import list_uploaded_files
+from services.upload_service import get_uploaded_files
 from services.diagnostics_service import get_log_json
 
 # In-memory store for acknowledged alert indices per file
@@ -58,7 +58,7 @@ def get_all_warnings(
     sensor_type: str | None = None,
 ) -> dict:
     """Get warnings across all uploaded files with optional filters."""
-    files = list_uploaded_files()
+    files = get_uploaded_files()
     all_logs: dict[str, dict] = {}
 
     for fname in files:
@@ -151,7 +151,7 @@ def clear_logs_for_file(filename: str) -> dict:
 def clear_all_logs() -> dict:
     """Clear all warning logs. Returns total removed count."""
     removed = 0
-    for fname in list_uploaded_files():
+    for fname in get_uploaded_files():
         log_path = os.path.join(LOG_FOLDER, f"{fname}.txt")
         if os.path.exists(log_path):
             os.remove(log_path)

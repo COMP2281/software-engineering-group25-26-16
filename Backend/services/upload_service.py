@@ -8,6 +8,9 @@ import pandas as pd
 from fastapi import UploadFile, HTTPException
 from config import UPLOADED_FOLDER, KNOWN_SENSORS
 from services.validators import validate_filename
+from sqlalchemy.orm import Session
+from models.upload import UploadedFile
+from sqlalchemy import select
 
 
 def validate_csv_content(filepath: str) -> dict:
@@ -65,7 +68,7 @@ def validate_csv_content(filepath: str) -> dict:
     }
 
 
-async def save_upload(user_id: int, file: UploadFile) -> dict:
+async def save_upload(user_id: int, file: UploadFile, db: Session) -> dict:
     """
     Save an uploaded file after validation.
 
@@ -116,6 +119,14 @@ async def save_upload(user_id: int, file: UploadFile) -> dict:
     # 6) Validate CSV content (cleans up file on failure)
     metadata = validate_csv_content(path)
 
+    # 7) Save to database
+    uploaded_file_record = UploadedFile(
+        user_id=user_id,
+        filename=filename,
+    )
+    db.add(uploaded_file_record)
+    db.commit()
+
     return {
         "filename": filename,
         **metadata,
@@ -142,9 +153,11 @@ def delete_file(filename: str, user_id: int) -> str:
     return filename
 
 
-def list_uploaded_files(user_id: int) -> list[str]:
+def get_uploaded_files(user_id: int, db: Session) -> list[UploadedFile]:
     """Return list of all uploaded CSV filenames."""
-    path = os.path.join(UPLOADED_FOLDER, str(user_id))
-    if not os.path.exists(path):
-        return []
-    return [f for f in os.listdir(path) if f.endswith(".csv")]
+    return db.query(UploadedFile).filter(UploadedFile.user_id == user_id).all()
+        
+    # path = os.path.join(UPLOADED_FOLDER, str(user_id))
+    # if not os.path.exists(path):
+    #     return []
+    # return [f for f in os.listdir(path) if f.endswith(".csv")]
