@@ -130,9 +130,9 @@ def train_oneclass_knn(normal_windows):
     real_distances = distances[:, 1]
 
     # instead of using the max distance,
-    # we use the 95th percentile as a threshold
+    # we use the 99.5th percentile as a threshold
     # this usually gives better anomaly detection
-    threshold = np.percentile(real_distances, 95)
+    threshold = np.percentile(real_distances, 99.5)
 
     return knn, threshold
 
