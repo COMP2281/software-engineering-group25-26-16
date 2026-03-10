@@ -188,23 +188,13 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== Sidebar-only additions ===== */
-
-.chatbot_layout {
-  display: flex;
-  gap: 24px;
-  align-items: stretch;
-}
+/* ===== Sidebar-only chat history styling ===== */
 
 .chat_sidebar {
-  width: 280px;
+  width: 260px;
   flex-shrink: 0;
-  padding: 18px 16px;
+  padding-right: 16px;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 18px;
-  backdrop-filter: blur(10px);
-  min-height: 70vh;
 }
 
 .new_chat_button {
@@ -214,9 +204,9 @@
   justify-content: center;
   gap: 10px;
   padding: 12px 14px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   border: none;
-  border-radius: 14px;
+  border-radius: 12px;
   cursor: pointer;
   background: linear-gradient(135deg, var(--primary-color), #6ea8ff);
   color: white;
@@ -227,7 +217,7 @@
 
 .new_chat_button:hover {
   transform: translateY(-1px);
-  opacity: 0.95;
+  opacity: 0.96;
 }
 
 .chat_sessions_list {
@@ -244,6 +234,7 @@
 
 .chat_session_button {
   flex: 1;
+  min-width: 0;
   padding: 10px 12px;
   border: none;
   border-radius: 10px;
