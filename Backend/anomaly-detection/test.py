@@ -14,61 +14,73 @@ add_noise_for_engine_coolant_temperature = anomaly_module.add_noise_for_engine_c
 train_oneclass_knn = anomaly_module.train_oneclass_knn
 detect_anomalies = anomaly_module.detect_anomalies
 
+sample_dir = os.path.join(os.path.dirname(__file__), "..", "sample_data")
 
-# number of files
-num_files = 47
 ratio_anomaly = 0.3
-num_anomalous = int(num_files * ratio_anomaly)
 
-normal = []
-anomalous = []
+idle_num_files = 47
+idle_num_anomalous = int(idle_num_files * ratio_anomaly)
 
-# build anomalous dataset
-for file in range(1, num_anomalous + 1):
-    print(f"Processing anomalous file {file}...")
-    df = load_data_frame(f"../sample_data/idle{file}.csv")
+drive_num_files = 13
+drive_num_anomalous = int(drive_num_files * ratio_anomaly)
+
+idle_normal = []
+idle_anomalous = []
+
+drive_normal = []
+drive_anomalous = []
+
+# idle anomalous
+for file in range(1, idle_num_anomalous + 1):
+    print(f"Processing anomalous idle file {file}...")
+    path = os.path.join(sample_dir, f"idle{file}.csv")
+    df = load_data_frame(path)
     df = add_noise_for_engine_coolant_temperature(df, snr_db=20, alpha=1.0, random_state=42)
     windows = clean_data(df)
-    anomalous.append(windows)
+    idle_anomalous.append(windows)
 
-# build normal dataset
-for file in range(num_anomalous + 1, num_files + 1):
-    print(f"Processing normal file {file}...")
-    df = load_data_frame(f"../sample_data/idle{file}.csv")
+# idle normal
+for file in range(idle_num_anomalous + 1, idle_num_files + 1):
+    print(f"Processing normal idle file {file}...")
+    path = os.path.join(sample_dir, f"idle{file}.csv")
+    df = load_data_frame(path)
     windows = clean_data(df)
-    normal.append(windows)
+    idle_normal.append(windows)
 
-num_drive_files = 13
-num_anomalous_drive = int(num_drive_files * ratio_anomaly)
-
-# build anomalous dataset for drive files
-for file in range(1, num_anomalous_drive + 1):
+# drive anomalous
+for file in range(1, drive_num_anomalous + 1):
     print(f"Processing anomalous drive file {file}...")
-    df = load_data_frame(f"../sample_data/drive{file}.csv")
+    path = os.path.join(sample_dir, f"drive{file}.csv")
+    df = load_data_frame(path)
     df = add_noise_for_engine_coolant_temperature(df, snr_db=20, alpha=1.0, random_state=42)
     windows = clean_data(df)
-    anomalous.append(windows)
+    drive_anomalous.append(windows)
 
-# build normal dataset for drive files
-for file in range(num_anomalous_drive + 1, num_drive_files + 1):
+# drive normal
+for file in range(drive_num_anomalous + 1, drive_num_files + 1):
     print(f"Processing normal drive file {file}...")
-    df = load_data_frame(f"../sample_data/drive{file}.csv")
+    path = os.path.join(sample_dir, f"drive{file}.csv")
+    df = load_data_frame(path)
     windows = clean_data(df)
-    normal.append(windows)
+    drive_normal.append(windows)
 
-# use most normal files for training
-train_normal = np.concatenate(normal[:-1], axis=0)
+# keep one normal idle file and one normal drive file for testing
+idle_normal_test = idle_normal[-1]
+drive_normal_test = drive_normal[-1]
 
-# keep one normal file for testing
-normal_test = normal[-1]
+# use the rest for training
+train_normal = np.concatenate(idle_normal[:-1] + drive_normal[:-1], axis=0)
 
-# combine anomalous files for testing
-anomaly_test = np.concatenate(anomalous, axis=0)
+# combined normal test
+normal_test = np.concatenate([idle_normal_test, drive_normal_test], axis=0)
+
+# combined anomalous test
+anomaly_test = np.concatenate(idle_anomalous + drive_anomalous, axis=0)
 
 # train classifier
 model, threshold = train_oneclass_knn(train_normal)
 
-# predict on normal and anomalous test data
+# predict on combined test data
 normal_preds, _ = detect_anomalies(model, threshold, normal_test)
 anomaly_preds, _ = detect_anomalies(model, threshold, anomaly_test)
 
@@ -95,7 +107,7 @@ fn = np.sum((y_true == 1) & (y_pred == 0))
 precision = tp / (tp + fp) if (tp + fp) > 0 else 0
 recall = tp / (tp + fn) if (tp + fn) > 0 else 0
 
-print("\n--- Results ---")
+print("\n--- Combined Idle + Drive Results ---")
 print("Accuracy:", round(float(accuracy), 4))
 print("Precision:", round(float(precision), 4))
 print("Recall:", round(float(recall), 4))
