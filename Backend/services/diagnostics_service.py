@@ -22,10 +22,10 @@ from models.warning import (
 )
 from services.validators import validate_filename, require_file_exists
 from services.data_service import get_csv_as_dataframe
+from anomaly_detection.anomaly_detection import AnomalyDetectionModel
 
 # Sensors that the user has disabled (e.g. malfunctioning)
 _disabled_sensors: set[str] = set()
-
 
 def disable_sensor(sensor_name: str) -> None:
     """Disable a sensor from anomaly detection."""
@@ -148,43 +148,44 @@ def run_diagnostics(filename: str, force_rescan: bool = False) -> dict:
     Always either writes/updates the log file OR raises an HTTPException.
     Caches results to log files; use force_rescan=True to re-run.
     """
-    filename = validate_filename(filename)
-    require_file_exists(filename)
 
-    # Check cache unless forced
-    if not force_rescan:
-        cached = get_log_json(filename)
-        if cached is not None:
-            return {
-                "filename": filename,
-                "total_warnings": len(cached.get("warnings", [])),
-                "warnings": cached["warnings"],
-                "summary": cached.get("summary", {}),
-                "cached": True,
-            }
-
-    # Load data (raises 404 if file missing, 500 if unreadable)
-    df = get_csv_as_dataframe(filename)
-    data = df.to_dict(orient="index")
-
-    all_warnings: list[Warning] = []
-    for _, row in data.items():
-        row_warnings = _scan_row(row)
-        all_warnings.extend(row_warnings)
-
-    # Always write log
-    log_warnings(filename, all_warnings)
-
-    warning_dicts = [w.to_dict() for w in all_warnings]
-    summary = _build_summary(all_warnings)
-
-    return {
-        "filename": filename,
-        "total_warnings": len(warning_dicts),
-        "warnings": warning_dicts,
-        "summary": summary,
-        "cached": False,
-    }
+    # filename = validate_filename(filename)
+    # require_file_exists(filename)
+    #
+    # # Check cache unless forced
+    # if not force_rescan:
+    #     cached = get_log_json(filename)
+    #     if cached is not None:
+    #         return {
+    #             "filename": filename,
+    #             "total_warnings": len(cached.get("warnings", [])),
+    #             "warnings": cached["warnings"],
+    #             "summary": cached.get("summary", {}),
+    #             "cached": True,
+    #         }
+    #
+    # # Load data (raises 404 if file missing, 500 if unreadable)
+    # df = get_csv_as_dataframe(filename)
+    # data = df.to_dict(orient="index")
+    #
+    # all_warnings: list[Warning] = []
+    # for _, row in data.items():
+    #     row_warnings = _scan_row(row)
+    #     all_warnings.extend(row_warnings)
+    #
+    # # Always write log
+    # log_warnings(filename, all_warnings)
+    #
+    # warning_dicts = [w.to_dict() for w in all_warnings]
+    # summary = _build_summary(all_warnings)
+    #
+    # return {
+    #     "filename": filename,
+    #     "total_warnings": len(warning_dicts),
+    #     "warnings": warning_dicts,
+    #     "summary": summary,
+    #     "cached": False,
+    # }
 
 
 def log_warnings(filename: str, warnings: list[Warning]) -> None:

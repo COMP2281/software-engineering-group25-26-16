@@ -6,6 +6,8 @@ All business logic is delegated to services/diagnostics_service.py.
 from fastapi import APIRouter, Query
 from models.schemas import SensorToggleRequest
 from services import diagnostics_service
+from services.auth_service import get_current_user
+from fastapi import Depends
 
 router = APIRouter(prefix="/diagnostics", tags=["Diagnostics"])
 
@@ -14,6 +16,7 @@ router = APIRouter(prefix="/diagnostics", tags=["Diagnostics"])
 async def run_diagnostics(
     filename: str,
     force_rescan: bool = Query(default=False, description="Force re-scan even if cached results exist"),
+    user = Depends(get_current_user)
 ):
     """Run anomaly detection on an uploaded CSV file. Results are cached unless force_rescan=true."""
     return diagnostics_service.run_diagnostics(filename, force_rescan=force_rescan)

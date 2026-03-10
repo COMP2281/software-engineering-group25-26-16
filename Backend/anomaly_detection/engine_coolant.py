@@ -1,16 +1,17 @@
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
-import base_warning
-from base_warning import BaseWarning, Severity
+import os
+
+from .base_warning import BaseWarning, Severity
 import pickle
 
 UPLOADED_FOLDER = "../uploaded_data"
 
 
 class EngineCoolantClassifier():
-    def __init__(self) -> None:
-        self._knn, self._threshold = init_model()
+    def __init__(self, data_path: str) -> None:
+        self._knn, self._threshold = init_model(data_path)
 
     def generate_warnings(self, filepath) -> list[BaseWarning]:
         # load the original file so we can get the run times
@@ -34,7 +35,7 @@ class EngineCoolantClassifier():
         return warnings
 
 
-class EngineCoolantWarning(base_warning.BaseWarning):
+class EngineCoolantWarning(BaseWarning):
     def __init__(self, run_time: float) -> None:
         super().__init__(run_time, severity=Severity.HIGH)
 
@@ -42,7 +43,7 @@ class EngineCoolantWarning(base_warning.BaseWarning):
         return "Engine coolant temperature anomaly detected."
 
 
-def init_model():
+def init_model(data_path: str):
     # try to load the model first
     model_file = "engine_coolant_model.pkl"
 
@@ -62,14 +63,16 @@ def init_model():
 
         # use idle files as normal training data
         for file in range(1, num_files_idle + 1):
+            path = os.path.join(data_path, f"idle{file}.csv")
             normal_windows.extend(
-                process_file(f"../sample_data/idle{file}.csv", add_anomalies=False)
+                process_file(path, add_anomalies=False)
             )
 
         # use drive files as normal training data
         for file in range(1, num_files_drive + 1):
+            path = os.path.join(data_path, f"drive{file}.csv")
             normal_windows.extend(
-                process_file(f"../sample_data/drive{file}.csv", add_anomalies=False)
+                process_file(path, add_anomalies=False)
             )
 
         knn, threshold = train_oneclass_knn(np.array(normal_windows))

@@ -3,8 +3,9 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 from sklearn import svm
-import engine_coolant
-from base_warning import BaseWarning, Severity
+
+from . import engine_coolant
+from .base_warning import BaseWarning, Severity
 
 UPLOADED_FOLDER = "../uploaded_data"
 
@@ -15,8 +16,8 @@ class AnomalyDetectionModel():
     # this will train the models to detect anomalies
     # currently only supports fuel tank and engine coolant sensor warnings,
     # will be expanded for other things soon!
-    def __init__(self):
-        self.engine_coolant = engine_coolant.EngineCoolantClassifier()
+    def __init__(self, data_path: str):
+        self.engine_coolant = engine_coolant.EngineCoolantClassifier(data_path)
 
     def generate_warnings(self, filepath) -> list[BaseWarning]:
         warnings = []
@@ -24,11 +25,11 @@ class AnomalyDetectionModel():
         return warnings
 
 # for testing purposes only
-if __name__ == "__main__":
-    model = AnomalyDetectionModel()
-    # warnings = model.generate_warnings(f"../sample_data/idle1test.csv")
-    # for warning in warnings:
-    #     print(warning.to_dict())
+# if __name__ == "__main__":
+#     model = AnomalyDetectionModel()
+#     # warnings = model.generate_warnings(f"../sample_data/idle1test.csv")
+#     # for warning in warnings:
+#     #     print(warning.to_dict())
 
 
 

@@ -28,6 +28,8 @@ from middleware.security import SecurityHeadersMiddleware
 from middleware.rate_limiter import register_rate_limiter
 from middleware.request_logger import RequestLoggerMiddleware
 
+from anomaly_detection.anomaly_detection import AnomalyDetectionModel
+
 #Logging 
 logging.basicConfig(
     level=logging.INFO,
@@ -65,6 +67,12 @@ register_error_handlers(app)
 #Ensure required directories exist on startup
 os.makedirs("./uploaded_data", exist_ok=True)
 os.makedirs("./logs", exist_ok=True)
+
+# ML model
+model = AnomalyDetectionModel("sample_data/")
+
+def get_model():
+    return model
 
 #  AUTH ROUTES 
 class UserRegisterRequest(BaseModel):
@@ -166,7 +174,7 @@ async def chat_with_granite(payload: dict = Body(...)):
     user_message = payload.get("message")
     
     try:
-        response = ollama.chat(model='granite3-dense:8b', messages=[
+        response = ollama.chat(model='granite4:350m', messages=[
             {
                 'role': 'system',
                 'content': 'You are Granite Guardian, a professional automotive expert. Explain OBD-II data simply.'
