@@ -56,7 +56,7 @@ train_normal = np.concatenate(idle_normal[:-1] + drive_normal[:-1], axis=0)
 # combined normal test
 normal_test = np.concatenate([idle_normal_test, drive_normal_test], axis=0)
 
-# combined anomalous test
+# combine all anomalous windows (idle + drive) for testing
 anomaly_test = np.concatenate(idle_anomalous + drive_anomalous, axis=0)
 
 # train classifier

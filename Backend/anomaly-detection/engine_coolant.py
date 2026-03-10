@@ -26,7 +26,8 @@ class EngineCoolantClassifier():
         warnings = []
         for idx, pred in enumerate(predictions):
             if pred == 1:
-                # each window ends at index idx + 4 when window size = 5
+                # each sliding window has size 5, so the warning corresponds
+                # to the last row of that window (idx + 4 in the original data)
                 run_time = run_times[idx + 4]
                 warnings.append(EngineCoolantWarning(run_time=run_time))
 
@@ -216,8 +217,8 @@ def windows_to_matrix(windows):
     # each window has shape:
     # (window_size, num_features)
 
-    # instead of flattening the whole window directly,
-    # we create some simple summary features
+    # instead of flattening the whole window,
+    # we extract simple summary features from it
 
     # average value in the window
     means = np.mean(windows, axis=1)
@@ -279,7 +280,7 @@ def train_oneclass_knn(normal_windows):
     real_distances = distances[:, 1]
 
     # instead of using the max distance,
-    # we use the 99.5th percentile as a threshold
+    # use the 99.5th percentile of training distances as anomaly threshold
     # this usually gives better anomaly detection
     threshold = np.percentile(real_distances, 99.5)
 
