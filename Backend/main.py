@@ -174,7 +174,7 @@ async def chat_with_granite(payload: dict = Body(...)):
     user_message = payload.get("message")
     
     try:
-        response = ollama.chat(model='granite4:350m', messages=[
+        response = ollama.chat(model='granite3-dense:8b', messages=[
             {
                 'role': 'system',
                 'content': 'You are Granite Guardian, a professional automotive expert. Explain OBD-II data simply.'
