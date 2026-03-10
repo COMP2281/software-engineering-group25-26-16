@@ -24,10 +24,12 @@ export default function Chatbot() {
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load saved chats when the page opens
   useEffect(() => {
     loadSessions();
   }, []);
 
+  // Always scroll to the newest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -64,6 +66,7 @@ export default function Chatbot() {
       const data = await response.json();
       setSessions(data);
 
+      // Open the newest chat automatically if one exists
       if (data.length > 0) {
         const latestSessionId = data[0].id;
         setActiveSessionId(latestSessionId);
@@ -126,11 +129,16 @@ export default function Chatbot() {
       }
 
       const newSession = await response.json();
+
+      // Put the new chat at the top of the sidebar
       setSessions((prev) => [newSession, ...prev]);
       setActiveSessionId(newSession.id);
+
+      // Reset the visible chat area for a fresh conversation
       setMessages([]);
       setHasStarted(false);
       setInputValue('');
+
       return newSession.id;
     } catch (error) {
       console.error('Error creating chat:', error);
@@ -161,6 +169,7 @@ export default function Chatbot() {
       const updatedSessions = sessions.filter((s) => s.id !== sessionId);
       setSessions(updatedSessions);
 
+      // If the deleted chat was open, move to another one if possible
       if (activeSessionId === sessionId) {
         if (updatedSessions.length > 0) {
           const nextSessionId = updatedSessions[0].id;
@@ -186,6 +195,7 @@ export default function Chatbot() {
 
     let sessionId = activeSessionId;
 
+    // If there is no active chat yet, create one first
     if (!sessionId) {
       sessionId = await createNewChat();
 
@@ -205,6 +215,7 @@ export default function Chatbot() {
       content: userText,
     };
 
+    // Show the user's message immediately and add a temporary loading message
     setMessages((prev) => [
       ...prev,
       newUserMsg,
@@ -251,6 +262,7 @@ export default function Chatbot() {
 
       const data = await response.json();
 
+      // Replace the temporary loading message with the actual reply
       setMessages((prev) =>
         prev.filter((m) => m.id !== typingId).concat({
           id: Date.now(),
@@ -259,6 +271,7 @@ export default function Chatbot() {
         })
       );
 
+      // Refresh the sidebar in case the title changed after the first message
       loadSessions();
     } catch (error) {
       console.error('Chat request error:', error);
@@ -275,12 +288,13 @@ export default function Chatbot() {
 
   return (
     <div className="chatbot_page_container chatbot_layout">
+      {/* Sidebar only changed for prettier chat history / new chat button */}
       <aside className="chat_sidebar">
         <button
           onClick={createNewChat}
+          className="new_chat_button"
           aria-label="Create new chat"
           title="Create new chat"
-          className="new_chat_button"
         >
           <Plus size={18} />
           <span>New Chat</span>
@@ -291,20 +305,20 @@ export default function Chatbot() {
             <div key={session.id} className="chat_session_row">
               <button
                 onClick={() => loadMessages(session.id)}
-                aria-label={`Open chat ${session.title}`}
-                title={session.title}
                 className={`chat_session_button ${
                   session.id === activeSessionId ? 'active' : ''
                 }`}
+                aria-label={`Open chat ${session.title}`}
+                title={session.title}
               >
                 <span className="chat_session_title">{session.title}</span>
               </button>
 
               <button
                 onClick={() => deleteChat(session.id)}
+                className="delete_chat_button"
                 aria-label={`Delete chat ${session.title}`}
                 title="Delete chat"
-                className="delete_chat_button"
               >
                 <Trash2 size={16} />
               </button>
@@ -313,7 +327,8 @@ export default function Chatbot() {
         </div>
       </aside>
 
-      <div className="chat_main_area">
+      {/* Main chat area restored to the older structure */}
+      <div style={{ flex: 1 }}>
         <div className={`chatbot_header ${hasStarted ? 'started' : 'centered'}`}>
           <h1 className="chatbot_main_title">
             Granite <span style={{ color: 'var(--primary-color)' }}>Guardian</span>

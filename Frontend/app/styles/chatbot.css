@@ -17,10 +17,6 @@
   min-height: 70vh;
 }
 
-.chat_main_area {
-  flex: 1;
-  min-width: 0;
-}
 
 /* ===== New chat button ===== */
 
