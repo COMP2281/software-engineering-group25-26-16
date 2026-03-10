@@ -1,127 +1,106 @@
 import pandas as pd
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
 import numpy as np
+from sklearn.neighbors import NearestNeighbors
 import base_warning
 from base_warning import BaseWarning, Severity
 import pickle
-from sklearn.model_selection import train_test_split
+
+UPLOADED_FOLDER = "../uploaded_data"
+
 
 class EngineCoolantClassifier():
     def __init__(self) -> None:
-        self._knn = init_model()
+        self._knn, self._threshold = init_model()
 
     def generate_warnings(self, filepath) -> list[BaseWarning]:
-        # load file
+        # load the original file so we can get the run times
         run_times = pd.read_csv(filepath, index_col=False)["ENGINE RUN TIME"].values
-        windows = process_file(filepath, add_anomalies=True)
-        predictions = self._knn.predict(windows)
 
-        print(f"{len(run_times)} and {len(windows)}")
-    
-        # generate warnings based on predictions
+        # process the file normally
+        windows = process_file(filepath, add_anomalies=False)
+
+        # get anomaly predictions from the model
+        predictions, _ = detect_anomalies(self._knn, self._threshold, windows)
+
+        # create warnings for the windows that were flagged
         warnings = []
         for idx, pred in enumerate(predictions):
-            if pred:  # if anomalous
-                # get runtime
-                run_time = run_times[idx]
+            if pred == 1:
+                # each window ends at index idx + 4 when window size = 5
+                run_time = run_times[idx + 4]
                 warnings.append(EngineCoolantWarning(run_time=run_time))
 
         return warnings
+
+
+class EngineCoolantWarning(base_warning.BaseWarning):
+    def __init__(self, run_time: float) -> None:
+        super().__init__(run_time, severity=Severity.HIGH)
 
     def message(self) -> str:
         return "Engine coolant temperature anomaly detected."
 
 
-class EngineCoolantWarning(BaseWarning):
-    def __init__(self, run_time: float) -> None:
-        super().__init__(run_time, severity = Severity.HIGH)
-
-
 def init_model():
-    # try to load model from file
+    # try to load the model first
     model_file = "engine_coolant_model.pkl"
-    # load it with pickle
+
     try:
         with open(model_file, "rb") as f:
             print("Loading KNN model from file...")
-            return pickle.load(f)
+            saved = pickle.load(f)
+            return saved["model"], saved["threshold"]
+
     except FileNotFoundError:
         print("Model file not found, training new model...")
+
         num_files_idle = 47
         num_files_drive = 13
 
-        files = [f"../sample_data/idle{file}.csv" for file in range(1, num_files_idle + 1)] + [f"../sample_data/drive{file}.csv" for file in range(1, num_files_drive + 1)]
+        normal_windows = []
 
-        # split them up 50/50
-        anomalous, normal = train_test_split(files, test_size=0.5, random_state=42)
+        # use idle files as normal training data
+        for file in range(1, num_files_idle + 1):
+            normal_windows.extend(
+                process_file(f"../sample_data/idle{file}.csv", add_anomalies=False)
+            )
 
-        # for each one, split them into train and test sets
-        ratio_test = 0.2
-        anomalous_train_names, anomalous_test_names = train_test_split(anomalous, test_size=ratio_test, random_state=42)
-        normal_train_names, normal_test_names = train_test_split(normal, test_size=ratio_test, random_state=42)
+        # use drive files as normal training data
+        for file in range(1, num_files_drive + 1):
+            normal_windows.extend(
+                process_file(f"../sample_data/drive{file}.csv", add_anomalies=False)
+            )
 
-        anomalous_train = []
-        anomalous_test = []
-        normal_train = []
-        normal_test = []
-
-        for name in anomalous_train_names:
-            anomalous_train.extend(process_file(name, add_anomalies=True))
-        for name in anomalous_test_names:
-            anomalous_test.extend(process_file(name, add_anomalies=True))
-        for name in normal_train_names:
-            normal_train.extend(process_file(name, add_anomalies=False))
-        for name in normal_test_names:
-            normal_test.extend(process_file(name, add_anomalies=False))
-
-        knn = train_knn(anomalous_train, normal_train)
-        test_knn(knn, anomalous_test, normal_test)
-
+        knn, threshold = train_oneclass_knn(np.array(normal_windows))
 
         # save model to file
         with open(model_file, "wb") as f:
-            pickle.dump(knn, f)
+            pickle.dump({
+                "model": knn,
+                "threshold": threshold
+            }, f)
 
-        return knn
+        return knn, threshold
 
 
-
-"""
-Processes file and returns sliding windows.
-"""
-def process_file(filepath, add_anomalies):
+# Processes file and returns sliding windows
+def process_file(filepath, add_anomalies=False):
     print(f"Processing file {filepath}...")
-    windows = pd.read_csv(filepath, index_col=False)
+    df = load_data_frame(filepath)
+
     if add_anomalies:
-        print(f"{len(windows)} rows before adding noise.")
-        windows = add_noise_for_engine_coolant_temperature(windows, snr_db=40, alpha=1.0, random_state=28)
-        print(f"{len(windows)} rows before adding noise.")
-    windows = clean_data(windows)
+        df = add_noise_for_engine_coolant_temperature(
+            df,
+            snr_db=20,
+            alpha=1.0,
+            random_state=42
+        )
+
+    windows = clean_data(df)
     return windows
 
-def train_knn(anomalous, normal):
-    train_data = np.array(anomalous + normal)
-    train_labels = np.array([True] * len(anomalous) + [False] * len(normal))
-    print(f"Training KNN with {len(anomalous)} anomalous samples and {len(normal)} normal samples ({len(train_data)} total)...")
 
-    model = KNeighborsClassifier()
-    model.fit(train_data, train_labels)
-    return model
-
-def test_knn(knn, anomalous, normal):
-    test_data = np.array(anomalous + normal)
-    test_labels = np.array([True] * len(anomalous) + [False] * len(normal))
-
-    print(f"Testing KNN with {len(anomalous)} anomalous samples and {len(normal)} normal samples ({len(test_data)} total)...")
-
-    accuracy = accuracy_score(test_labels, knn.predict(test_data))
-    print(f"KNN Accuracy: {accuracy:.4f}")
-
-
-"""
-Cleans data, does feature selection and extraction, and creates sliding windows
-"""
+# Cleans data, does feature selection and extraction, and creates sliding windows
 def clean_data(df, window_size=5):
     # add standard deviation of coolant temperature as a feature
     std_temp = df["COOLANT TEMPERATURE"].rolling(window_size).std()
@@ -129,77 +108,202 @@ def clean_data(df, window_size=5):
     # normalise between 0 and 1
     std_temp_min = std_temp.min()
     std_temp_max = std_temp.max()
-    df["COOLANT TEMPERATURE STD"] = (std_temp - std_temp_min) / (std_temp_max - std_temp_min)
+
+    if std_temp_max == std_temp_min:
+        df["COOLANT TEMPERATURE STD"] = 0.0
+    else:
+        df["COOLANT TEMPERATURE STD"] = (std_temp - std_temp_min) / (std_temp_max - std_temp_min)
 
     # perform feature selection
     df = feature_selection(df)
 
     # perform feature extraction
-    # will also flatten each window
     windows = create_sliding_windows(df, window_size=window_size)
 
-    # shape of windows = (num_windows, num_rows_per_window, num_features)
     return windows
 
+
 def add_noise_for_engine_coolant_temperature(df, snr_db=20, alpha=1.0, random_state=None):
-    df["COOLANT TEMPERATURE"], _ = add_flicker_noise(df["COOLANT TEMPERATURE"], snr_db, alpha, random_state)
+    df["COOLANT TEMPERATURE"], _ = add_flicker_noise(
+        df["COOLANT TEMPERATURE"],
+        snr_db,
+        alpha,
+        random_state
+    )
     return df
+
 
 def load_data_frame(path) -> pd.DataFrame:
     return pd.read_csv(path, index_col=False)
+
 
 def add_flicker_noise(signal, snr_db, alpha=1.0, random_state=None):
     signal = np.asarray(signal)
     n = len(signal)
 
-    # Generate flicker noise
+    # generate flicker noise
     noise = generate_flicker_noise(n, alpha, random_state)
 
-    # Compute signal power
-    signal_power = np.mean(signal**2)
+    # compute signal power
+    signal_power = np.mean(signal ** 2)
 
-    # Desired noise power
-    noise_power = signal_power / (10**(snr_db / 10))
+    # desired noise power
+    noise_power = signal_power / (10 ** (snr_db / 10))
 
-    # Scale noise
+    # scale noise
     noise *= np.sqrt(noise_power)
 
-    # Add to signal
+    # add to signal
     noisy_signal = signal + noise
 
     return noisy_signal, noise
 
+
 def generate_flicker_noise(n, alpha=1.0, random_state=None):
     rng = np.random.default_rng(random_state)
 
-    # Frequencies
+    # frequencies
     freqs = np.fft.rfftfreq(n)
     freqs[0] = 1e-10  # avoid division by zero at DC
 
-    # White noise in frequency domain
+    # white noise in frequency domain
     real = rng.normal(size=len(freqs))
     imag = rng.normal(size=len(freqs))
     spectrum = real + 1j * imag
 
-    # Apply 1/f^(alpha/2) shaping
+    # apply 1/f^(alpha/2) shaping
     spectrum /= freqs ** (alpha / 2.0)
 
-    # Transform back to time domain
+    # transform back to time domain
     noise = np.fft.irfft(spectrum, n=n)
 
-    # Normalize to unit variance
+    # normalise to unit variance
     noise /= np.std(noise)
 
     return noise
 
+
 def feature_selection(df):
-    cols = ["ENGINE LOAD", "ENGINE RPM", "LONG TERM FUEL TRIM BANK 1", "FUEL TANK", "INTAKE MANIFOLD PRESSURE", "CATALYST TEMPERATURE BANK1 SENSOR1", "CATALYST TEMPERATURE BANK1 SENSOR2", "COOLANT TEMPERATURE", "COOLANT TEMPERATURE STD"]
+    cols = [
+        "ENGINE LOAD",
+        "ENGINE RPM",
+        "LONG TERM FUEL TRIM BANK 1",
+        "FUEL TANK",
+        "INTAKE MANIFOLD PRESSURE",
+        "CATALYST TEMPERATURE BANK1 SENSOR1",
+        "CATALYST TEMPERATURE BANK1 SENSOR2",
+        "COOLANT TEMPERATURE",
+        "COOLANT TEMPERATURE STD"
+    ]
     return df[cols]
 
-def create_sliding_windows(df, window_size):
-    windows = [df.iloc[i:i+window_size].values.flatten() for i in range(len(df) - window_size + 1)]
-    windows = np.array(windows)
 
-    # remove any rows that contain NaN values
-    windows = windows[~np.isnan(windows).any(axis=1)]
+def create_sliding_windows(df, window_size):
+    windows = [df.iloc[i:i + window_size].values for i in range(len(df) - window_size + 1)]
+    windows = np.array(windows)
     return windows
+
+
+# Start of the classifier code
+
+# we store these so we can normalise the test data
+# using the same values from the training data
+_train_mean = None
+_train_std = None
+
+
+def windows_to_matrix(windows):
+    # each window has shape:
+    # (window_size, num_features)
+
+    # instead of flattening the whole window directly,
+    # we create some simple summary features
+
+    # average value in the window
+    means = np.mean(windows, axis=1)
+
+    # standard deviation in the window
+    stds = np.std(windows, axis=1)
+
+    # last value of the window (most recent reading)
+    lasts = windows[:, -1, :]
+
+    # combine everything into one feature matrix
+    X = np.concatenate([means, stds, lasts], axis=1)
+
+    # remove rows that contain NaN values
+    # these come from the rolling std earlier
+    X = X[~np.isnan(X).any(axis=1)]
+
+    return X
+
+
+def normalise_train(X):
+    # compute mean and std from training data
+    global _train_mean, _train_std
+
+    _train_mean = np.mean(X, axis=0)
+    _train_std = np.std(X, axis=0)
+
+    # avoid division by zero
+    _train_std[_train_std == 0] = 1
+
+    # standardise the data
+    return (X - _train_mean) / _train_std
+
+
+def normalise_test(X):
+    # apply the same scaling used for training
+    global _train_mean, _train_std
+
+    return (X - _train_mean) / _train_std
+
+
+def train_oneclass_knn(normal_windows):
+    # convert windows into feature vectors
+    X_train = windows_to_matrix(normal_windows)
+
+    # scale the features so they are comparable
+    X_train = normalise_train(X_train)
+
+    # we use k=2 because the closest neighbour
+    # will always be the point itself
+    knn = NearestNeighbors(n_neighbors=2)
+
+    # train using only normal data
+    knn.fit(X_train)
+
+    distances, _ = knn.kneighbors(X_train)
+
+    # ignore the first column (distance to itself = 0)
+    real_distances = distances[:, 1]
+
+    # instead of using the max distance,
+    # we use the 99.5th percentile as a threshold
+    # this usually gives better anomaly detection
+    threshold = np.percentile(real_distances, 99.5)
+
+    return knn, threshold
+
+
+def detect_anomalies(model, threshold, test_windows):
+    # convert test windows into features
+    X_test = windows_to_matrix(test_windows)
+
+    # scale test data using training statistics
+    X_test = normalise_test(X_test)
+
+    # compare test points to the normal training data
+    test_knn = NearestNeighbors(n_neighbors=1)
+    test_knn.fit(model._fit_X)
+
+    distances, _ = test_knn.kneighbors(X_test)
+
+    distances = distances.flatten()
+
+    # if the distance is larger than the threshold
+    # we mark it as an anomaly
+    predictions = (distances > threshold).astype(int)
+
+    # 1 = anomaly, 0 = normal
+    return predictions, distances
