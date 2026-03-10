@@ -6,7 +6,7 @@ Handles user registration, login, and JWT token management
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, Response, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -64,7 +64,7 @@ async def register_user(username: str, email: str, password: str, db: Session = 
     }
 
 # Login user
-async def login_user(email: str, password: str, db: Session = Depends(get_db)):
+async def login_user(email: str, password: str, response: Response, db: Session = Depends(get_db)):
     # Find user
     user = user_service.get_user_by_email(db, email)
     if not user or not verify_password(password, user.hashed_password):
@@ -72,41 +72,70 @@ async def login_user(email: str, password: str, db: Session = Depends(get_db)):
     
     # Create token
     token = create_access_token({"sub": user.username})
-    
+
+    # Set cookie (HTTP-only)
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    );
+
     return {
-        "token": token,
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "role": user.role
-        }
-    }
+        "message": "Login successful",
+    };
+
+    # return {
+    #     "token": token,
+    #     "user": {
+    #         "id": user.id,
+    #         "username": user.username,
+    #         "email": user.email,
+    #         "role": user.role
+    #     }
+    # }
+
+# async def get_current_user(
+#     credentials: HTTPAuthorizationCredentials = Depends(security),
+#     db: Session = Depends(get_db)
+# ):
+#     token = credentials.credentials
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#         username: str = payload.get("sub")
+#         if username is None:
+#             raise HTTPException(status_code=401, detail="Invalid token")
+#     except JWTError:
+#         raise HTTPException(status_code=401, detail="Invalid token")
+#
+#     user = user_service.get_user_by_username(db, username)
+#     if user is None:
+#         raise HTTPException(status_code=401, detail="User not found")
+#
+#     return {
+#         "id": user.id,
+#         "username": user.username,
+#         "email": user.email,
+#         "role": user.role
+#     }
 
 # Get current user from token
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-):
-    token = credentials.credentials
+def get_current_user(request: Request, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No token found")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        username = payload.get("sub")
         if username is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     
+    # get user from database
     user = user_service.get_user_by_username(db, username)
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    return {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "role": user.role
-    }
+    return user
 
 # Optional: Get current user (returns None if no token)
 async def get_current_user_optional(

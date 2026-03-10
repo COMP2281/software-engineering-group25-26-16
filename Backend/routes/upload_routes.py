@@ -6,37 +6,43 @@ All business logic is delegated to services/upload_service.py.
 from fastapi import APIRouter, UploadFile
 from services import upload_service
 from services import diagnostics_service
+from services.auth_service import get_current_user
+from fastapi import Depends
 
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
 
-@router.post("/", status_code=201)
-async def upload_file(file: UploadFile):
+@router.post("/upload", status_code=201)
+async def upload_file(file: UploadFile, user = Depends(get_current_user)):
     """Upload a CSV file containing OBD-II sensor data. Returns 201 on success."""
-    result = await upload_service.save_upload(file)
-
-    diagnostics = diagnostics_service.run_diagnostics(result["filename"])
+    await upload_service.save_upload(user.id, file)
 
     return {
-        "message": f"File '{result['filename']}' uploaded and analysed successfully.",
-        "filename": result["filename"],
-        "rows_parsed": result["rows_parsed"],
-        "columns": result["columns"],
-        "recognised_sensors": result["recognised_sensors"],
-        "duplicates_removed": result["duplicates_removed"],
-        "diagnostics": diagnostics,
+        "message": "File uploaded successfully.",
     }
 
+    # diagnostics = diagnostics_service.run_diagnostics(result["filename"])
+    #
+    # return {
+    #     "message": f"File '{result['filename']}' uploaded and analysed successfully.",
+    #     "filename": result["filename"],
+    #     "rows_parsed": result["rows_parsed"],
+    #     "columns": result["columns"],
+    #     "recognised_sensors": result["recognised_sensors"],
+    #     "duplicates_removed": result["duplicates_removed"],
+    #     "diagnostics": diagnostics,
+    # }
 
-@router.get("/")
-async def list_uploads():
+
+@router.get("/list")
+async def list_uploads(user = Depends(get_current_user)):
     """List all uploaded CSV files."""
-    files = upload_service.list_uploaded_files()
+    files = upload_service.list_uploaded_files(user.id)
     return {"files": files, "count": len(files)}
 
 
 @router.delete("/{filename}")
-async def delete_upload(filename: str):
+async def delete_upload(filename: str, user = Depends(get_current_user)):
     """Delete an uploaded CSV and its warning log. Returns 404 if not found."""
-    deleted = upload_service.delete_file(filename)
+    deleted = upload_service.delete_file(filename, user.id)
     return {"message": f"File '{deleted}' deleted successfully.", "filename": deleted}

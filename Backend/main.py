@@ -18,6 +18,9 @@ import ollama
 from fastapi import Body
 from routes import upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
 from pydantic import BaseModel
+from services import user_service
+from fastapi import Response, HTTPException
+from services.auth_service import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 
 from services import auth_service
 from middleware.error_handler import register_error_handlers
@@ -64,7 +67,6 @@ os.makedirs("./uploaded_data", exist_ok=True)
 os.makedirs("./logs", exist_ok=True)
 
 #  AUTH ROUTES 
-# use pydantic here
 class UserRegisterRequest(BaseModel):
     username: str
     email: str
@@ -74,19 +76,45 @@ class UserRegisterRequest(BaseModel):
 @app.post("/auth/register", tags=["Authentication"])
 async def register(
     req: UserRegisterRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Register a new user"""
     return await auth_service.register_user(req.username, req.email, req.password, db)
 
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
 @app.post("/auth/login", tags=["Authentication"])
 async def login(
-    username: str, 
-    password: str,
+    req: UserLoginRequest,
+    response: Response,
     db: Session = Depends(get_db)
 ):
-    """Login and get JWT token"""
-    return await auth_service.login_user(username, password, db)
+    # """Login and get JWT token"""
+    # return await auth_service.login_user(req.email, req.password, db)
+    #
+    # Find user
+    user = user_service.get_user_by_email(db, req.email)
+    if not user or not verify_password(req.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Create token
+    token = create_access_token({"sub": user.username})
+
+    # Set cookie (HTTP-only)
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    );
+
+    return {
+        "message": "Login successful",
+    };
+
 
 @app.get("/auth/me", tags=["Authentication"])
 async def get_current_user(
@@ -96,25 +124,26 @@ async def get_current_user(
     return current_user
 
 
-@app.post("/chat", tags=["AI Chatbot"])
-async def chat_with_granite(payload: dict = Body(...)):
-    user_message = payload.get("message")
-    
-    try:
-        response = ollama.chat(model='granite3-dense:2b', messages=[
-            {
-                'role': 'system',
-                'content': 'You are Granite Guardian, a professional automotive expert. Explain OBD-II data simply.'
-            },
-            {
-                'role': 'user',
-                'content': user_message
-            }
-        ])
-        return {"reply": response['message']['content']}
-        
-    except Exception as e:
-        return {"reply": "Connection to Granite failed. Make sure the Ollama app is running on your Mac."} 
+# @app.post("/chat", tags=["AI Chatbot"])
+# async def chat_with_granite(payload: dict = Body(...)):
+#     user_message = payload.get("message")
+#
+#     try:
+#         response = ollama.chat(model='granite3-dense:2b', messages=[
+#             {
+#                 'role': 'system',
+#                 'content': 'You are Granite Guardian, a professional automotive expert. Explain OBD-II data simply.'
+#             },
+#             {
+#                 'role': 'user',
+#                 'content': user_message
+#             }
+#         ])
+#         return {"reply": response['message']['content']}
+#
+#     except Exception as e:
+#         return {"reply": "Connection to Granite failed. Perhaps Ollama isn't running?"} 
+
 # Mount their routers
 app.include_router(upload_routes.router)
 app.include_router(data_routes.router)

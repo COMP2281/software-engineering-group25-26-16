@@ -28,6 +28,7 @@ export default function Index() {
     try {
       const response = await fetch(endpoint, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -75,36 +76,36 @@ export default function Index() {
 
           <form onSubmit={handleSubmit} className="auth_form">
             {/* USERNAME FIELD: Always visible */}
-            <div className="input_group">
-              <label>Username</label>
-              <div className="input_wrapper">
-                <User size={18} className="input_icon" />
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="e.g. mechanic_mike"
-                />
-              </div>
-            </div>
-
-            {/* EMAIL FIELD: Only shows up if they are Creating an Account */}
             {!isLogin && (
-              <div className="input_group fade_in">
-                <label>Email</label>
+              <div className="input_group">
+                <label>Username</label>
                 <div className="input_wrapper">
-                  <Mail size={18} className="input_icon" />
+                  <User size={18} className="input_icon" />
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="e.g. mechanic_mike"
                   />
                 </div>
               </div>
             )}
+
+            {/* EMAIL FIELD: Always visible */}
+            <div className="input_group fade_in">
+              <label>Email</label>
+              <div className="input_wrapper">
+                <Mail size={18} className="input_icon" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@company.com"
+                />
+              </div>
+            </div>
 
             {/* PASSWORD FIELD: Always visible */}
             <div className="input_group">

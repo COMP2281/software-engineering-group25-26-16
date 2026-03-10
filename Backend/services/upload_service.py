@@ -65,7 +65,7 @@ def validate_csv_content(filepath: str) -> dict:
     }
 
 
-async def save_upload(file: UploadFile) -> dict:
+async def save_upload(user_id: int, file: UploadFile) -> dict:
     """
     Save an uploaded file after validation.
 
@@ -95,7 +95,8 @@ async def save_upload(file: UploadFile) -> dict:
     # 3) Filename safety via shared validator (traversal, length)
     filename = validate_filename(filename)
 
-    path = os.path.join(UPLOADED_FOLDER, filename)
+    path = os.path.join(UPLOADED_FOLDER, str(user_id), filename)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
 
     # 4) Duplicate check
     if os.path.exists(path):
@@ -121,14 +122,14 @@ async def save_upload(file: UploadFile) -> dict:
     }
 
 
-def delete_file(filename: str) -> str:
+def delete_file(filename: str, user_id: int) -> str:
     """
     Delete an uploaded CSV and its associated log.
     After deletion, /alerts/{filename} and /diagnostics/{filename} will return 404.
     """
     filename = validate_filename(filename)
 
-    path = os.path.join(UPLOADED_FOLDER, filename)
+    path = os.path.join(UPLOADED_FOLDER, str(user_id), filename)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail=f"File '{filename}' not found.")
 
@@ -141,8 +142,9 @@ def delete_file(filename: str) -> str:
     return filename
 
 
-def list_uploaded_files() -> list[str]:
+def list_uploaded_files(user_id: int) -> list[str]:
     """Return list of all uploaded CSV filenames."""
-    if not os.path.exists(UPLOADED_FOLDER):
+    path = os.path.join(UPLOADED_FOLDER, str(user_id))
+    if not os.path.exists(path):
         return []
-    return [f for f in os.listdir(UPLOADED_FOLDER) if f.endswith(".csv")]
+    return [f for f in os.listdir(path) if f.endswith(".csv")]
