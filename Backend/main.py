@@ -132,25 +132,6 @@ async def get_current_user(
     return current_user
 
 
-# @app.post("/chat", tags=["AI Chatbot"])
-# async def chat_with_granite(payload: dict = Body(...)):
-#     user_message = payload.get("message")
-#
-#     try:
-#         response = ollama.chat(model='granite3-dense:2b', messages=[
-#             {
-#                 'role': 'system',
-#                 'content': 'You are Granite Guardian, a professional automotive expert. Explain OBD-II data simply.'
-#             },
-#             {
-#                 'role': 'user',
-#                 'content': user_message
-#             }
-#         ])
-#         return {"reply": response['message']['content']}
-#
-#     except Exception as e:
-#         return {"reply": "Connection to Granite failed. Perhaps Ollama isn't running?"} 
 
 # Mount their routers
 app.include_router(upload_routes.router)
