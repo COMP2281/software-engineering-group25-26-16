@@ -20,11 +20,6 @@ export default function Upload() {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<Warning[]>([]);
 
-  // const getApiDomain = () => {
-  //     if (typeof window === 'undefined') return '';
-  //     return `${window.location.protocol}//api.${window.location.host}`;
-  // };
-
   useEffect(() => {
     fetchFiles();
   }, []);
@@ -242,4 +237,3 @@ export default function Upload() {
     </div>
   );
 }
-

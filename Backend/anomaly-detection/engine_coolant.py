@@ -85,14 +85,14 @@ def init_model():
 
 
 # Processes file and returns sliding windows
-def process_file(filepath, add_anomalies=False):
+def process_file(filepath, add_anomalies=False, anomaly_snr=18):
     print(f"Processing file {filepath}...")
     df = load_data_frame(filepath)
 
     if add_anomalies:
         df = add_noise_for_engine_coolant_temperature(
             df,
-            snr_db=20,
+            snr_db=anomaly_snr,
             alpha=1.0,
             random_state=42
         )

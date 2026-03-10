@@ -17,33 +17,35 @@ idle_anomalous = []
 drive_normal = []
 drive_anomalous = []
 
+anomaly_snr = 18
+
 
 # idle anomalous
 for file in range(1, idle_num_anomalous + 1):
     print(f"Processing anomalous idle file {file}...")
     path = f"../sample_data/idle{file}.csv"
-    windows = engine_coolant.process_file(path, add_anomalies=True)
+    windows = engine_coolant.process_file(path, add_anomalies=True, anomaly_snr=anomaly_snr)
     idle_anomalous.append(windows)
 
 # idle normal
 for file in range(idle_num_anomalous + 1, idle_num_files + 1):
     print(f"Processing normal idle file {file}...")
     path = f"../sample_data/idle{file}.csv"
-    windows = engine_coolant.process_file(path, add_anomalies=False)
+    windows = engine_coolant.process_file(path, add_anomalies=False, anomaly_snr=anomaly_snr)
     idle_normal.append(windows)
 
 # drive anomalous
 for file in range(1, drive_num_anomalous + 1):
     print(f"Processing anomalous drive file {file}...")
     path = f"../sample_data/drive{file}.csv"
-    windows = engine_coolant.process_file(path, add_anomalies=True)
+    windows = engine_coolant.process_file(path, add_anomalies=True, anomaly_snr=anomaly_snr)
     drive_anomalous.append(windows)
 
 # drive normal
 for file in range(drive_num_anomalous + 1, drive_num_files + 1):
     print(f"Processing normal drive file {file}...")
     path = f"../sample_data/drive{file}.csv"
-    windows = engine_coolant.process_file(path, add_anomalies=False)
+    windows = engine_coolant.process_file(path, add_anomalies=False, anomaly_snr=anomaly_snr)
     drive_normal.append(windows)
 
 # keep one normal idle file and one normal drive file for testing
