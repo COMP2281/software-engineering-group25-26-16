@@ -1,11 +1,5 @@
-import pandas as pd
-import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
-from sklearn import svm
-
 from . import engine_coolant, catalytic
-from .base_warning import BaseWarning, Severity
+from .base_warning import BaseWarning
 
 UPLOADED_FOLDER = "../uploaded_data"
 

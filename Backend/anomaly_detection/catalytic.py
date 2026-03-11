@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from .base_warning import Severity
 from anomaly_detection.base_warning import BaseWarning
@@ -24,7 +25,12 @@ class CatalyticClassifier():
         inlet_temp = df["CATALYST TEMPERATURE BANK1 SENSOR2"].values[time_thresholding]
         outlet_temp = df["CATALYST TEMPERATURE BANK1 SENSOR1"].values[time_thresholding]
 
-        anomalies = (outlet_temp - inlet_temp) < DIFFERENCE_THRESHOLD
+        anomaly_condition = (outlet_temp - inlet_temp) < DIFFERENCE_THRESHOLD
+        
+        # anomaly should be detected 5 times in a row before we raise a
+        # warning, to avoid false positives from random fluctuations
+        anomalies = np.convolve(anomaly_condition, np.ones(5, dtype=int), mode='valid') == 5
+
         for run_time in run_time[anomalies]:
             warnings.append(CatalyticWarning(run_time))
 
@@ -38,6 +44,3 @@ class CatalyticWarning(BaseWarning):
 
     def message(self) -> str:
         return "Catalytic converter is not producing enough heat - might be malfunctioning."
-
-
-
