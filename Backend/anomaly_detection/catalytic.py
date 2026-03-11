@@ -6,7 +6,7 @@ from base_warning import BaseWarning
 
 
 # the amount that the outlet must be hotter than the inlet after TIME_THRESHOLD seconds have elapsed.
-DIFFERENCE_THRESHOLD = 80
+DIFFERENCE_THRESHOLD = 15
 
 # won't be looking for anomalies until after 10 minutes (i.e. after the
 # catalytic converter has had time to warm up).
