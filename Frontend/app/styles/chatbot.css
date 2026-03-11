@@ -99,15 +99,13 @@
 
 /* Bottom Search Bar */
 .chatbot_bottom_search {
-  padding: 1rem;
-  background-color: white;
-  border-top: 1px solid #e2e8f0;
-  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 1em;
 }
 
 .bottom_wrapper {
-  max-width: 50rem;
-  margin: 0 auto;
+  width: 50%;
 }
 
 .bottom_input {
@@ -193,7 +191,10 @@
 .chat_sidebar {
   width: 260px;
   flex-shrink: 0;
-  padding-right: 16px;
+
+  /* pushes the sidebar down so it aligns with the chat area */
+  padding: 110px 16px 0 0;
+
   border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -202,16 +203,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 12px 14px;
-  margin-bottom: 16px;
+  gap: 8px;
+
+  padding: 10px 12px;
+  margin-bottom: 14px;
+
   border: none;
   border-radius: 12px;
+
   cursor: pointer;
+
   background: linear-gradient(135deg, var(--primary-color), #6ea8ff);
   color: white;
+
   font-weight: 600;
   font-size: 0.95rem;
+
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
@@ -277,4 +284,22 @@
 
 .delete_chat_button:hover {
   background: rgba(255, 80, 80, 0.25);
+}
+
+.chatbot_content_row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.chat_sidebar {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.chat_history_panel {
+  flex: 1;
+  min-width: 0;
 }

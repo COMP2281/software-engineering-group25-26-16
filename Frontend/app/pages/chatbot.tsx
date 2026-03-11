@@ -24,10 +24,12 @@ export default function Chatbot() {
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load saved chats when the page first opens
   useEffect(() => {
     loadSessions();
   }, []);
 
+  // Always scroll to the newest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -64,6 +66,7 @@ export default function Chatbot() {
       const data = await response.json();
       setSessions(data);
 
+      // Open the newest chat automatically if one exists
       if (data.length > 0) {
         const latestSessionId = data[0].id;
         setActiveSessionId(latestSessionId);
@@ -161,6 +164,7 @@ export default function Chatbot() {
       const updatedSessions = sessions.filter((s) => s.id !== sessionId);
       setSessions(updatedSessions);
 
+      // If the deleted chat was open, move to another one if possible
       if (activeSessionId === sessionId) {
         if (updatedSessions.length > 0) {
           const nextSessionId = updatedSessions[0].id;
@@ -186,6 +190,7 @@ export default function Chatbot() {
 
     let sessionId = activeSessionId;
 
+    // If there is no active chat yet, create one first
     if (!sessionId) {
       sessionId = await createNewChat();
 
@@ -205,6 +210,7 @@ export default function Chatbot() {
       content: userText,
     };
 
+    // Show the user message immediately and a temporary loading message
     setMessages((prev) => [
       ...prev,
       newUserMsg,
@@ -251,6 +257,7 @@ export default function Chatbot() {
 
       const data = await response.json();
 
+      // Replace the temporary loading message with the real reply
       setMessages((prev) =>
         prev.filter((m) => m.id !== typingId).concat({
           id: Date.now(),
@@ -259,6 +266,7 @@ export default function Chatbot() {
         })
       );
 
+      // Refresh the sidebar in case the title changed
       loadSessions();
     } catch (error) {
       console.error('Chat request error:', error);
@@ -274,75 +282,75 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="chatbot_page_container" style={{ display: 'flex', gap: '20px' }}>
-      <aside className="chat_sidebar">
-        <button
-          onClick={createNewChat}
-          className="new_chat_button"
-          aria-label="Create new chat"
-          title="Create new chat"
-        >
-          <Plus size={18} />
-          <span>New Chat</span>
-        </button>
+    <div className="chatbot_page_container">
+      <div className={`chatbot_header ${hasStarted ? 'started' : 'centered'}`}>
+        <h1 className="chatbot_main_title">
+          Granite <span style={{ color: 'var(--primary-color)' }}>Guardian</span>
+        </h1>
 
-        <div className="chat_sessions_list">
-          {sessions.map((session) => (
-            <div key={session.id} className="chat_session_row">
+        {!hasStarted && (
+          <div className="chatbot_initial_search">
+            <div className="search_input_wrapper">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Ask Granite Guardian anything..."
+                className="search_input"
+              />
               <button
-                onClick={() => loadMessages(session.id)}
-                className={`chat_session_button ${session.id === activeSessionId ? 'active' : ''}`}
-                aria-label={`Open chat ${session.title}`}
-                title={session.title}
+                onClick={() => handleSend()}
+                className="send_button"
+                aria-label="Send message"
+                title="Send message"
               >
-                <span className="chat_session_title">{session.title}</span>
-              </button>
-
-              <button
-                onClick={() => deleteChat(session.id)}
-                className="delete_chat_button"
-                aria-label={`Delete chat ${session.title}`}
-                title="Delete chat"
-              >
-                <Trash2 size={16} />
+                <Send size={24} />
               </button>
             </div>
-          ))}
-        </div>
-      </aside>
+          </div>
+        )}
+      </div>
 
-      <div style={{ flex: 1 }}>
-        <div className={`chatbot_header ${hasStarted ? 'started' : 'centered'}`}>
-          <h1 className="chatbot_main_title">
-            Granite <span style={{ color: 'var(--primary-color)' }}>Guardian</span>
-          </h1>
+      {hasStarted && (
+        <div className="chatbot_content_row">
+          <aside className="chat_sidebar">
+            <button
+              onClick={createNewChat}
+              className="new_chat_button"
+              aria-label="Create new chat"
+              title="Create new chat"
+            >
+              <Plus size={18} />
+              <span>New Chat</span>
+            </button>
 
-          {!hasStarted && (
-            <div className="chatbot_initial_search">
-              <div className="search_input_wrapper">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask Granite Guardian anything..."
-                  className="search_input"
-                />
-                <button
-                  onClick={() => handleSend()}
-                  className="send_button"
-                  aria-label="Send message"
-                  title="Send message"
-                >
-                  <Send size={24} />
-                </button>
-              </div>
+            <div className="chat_sessions_list">
+              {sessions.map((session) => (
+                <div key={session.id} className="chat_session_row">
+                  <button
+                    onClick={() => loadMessages(session.id)}
+                    className={`chat_session_button ${session.id === activeSessionId ? 'active' : ''}`}
+                    aria-label={`Open chat ${session.title}`}
+                    title={session.title}
+                  >
+                    <span className="chat_session_title">{session.title}</span>
+                  </button>
+
+                  <button
+                    onClick={() => deleteChat(session.id)}
+                    className="delete_chat_button"
+                    aria-label={`Delete chat ${session.title}`}
+                    title="Delete chat"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+          </aside>
 
-        {hasStarted && (
-          <div className="chatbot_history_area fade_in">
+          <div className="chatbot_history_area fade_in chat_history_panel">
             <div className="chat_messages_container">
               {messages.map((msg) => (
                 <div key={msg.id} className={`message_row ${msg.role}`}>
@@ -361,31 +369,31 @@ export default function Chatbot() {
               <div ref={messagesEndRef} />
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {hasStarted && (
-          <div className="chatbot_bottom_search fade_in_up">
-            <div className="search_input_wrapper bottom_wrapper">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Message Granite Guardian..."
-                className="search_input bottom_input"
-              />
-              <button
-                onClick={() => handleSend()}
-                className="send_button bottom_send"
-                aria-label="Send message"
-                title="Send message"
-              >
-                <Send size={20} />
-              </button>
-            </div>
+      {hasStarted && (
+        <div className="chatbot_bottom_search fade_in_up">
+          <div className="search_input_wrapper bottom_wrapper">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Message Granite Guardian..."
+              className="search_input bottom_input"
+            />
+            <button
+              onClick={() => handleSend()}
+              className="send_button bottom_send"
+              aria-label="Send message"
+              title="Send message"
+            >
+              <Send size={20} />
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
