@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
+# Delete SQL database
+RUN rm -f /app/granite.db
+
 # Expose port
 EXPOSE 8000
 

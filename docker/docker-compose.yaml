@@ -1,0 +1,21 @@
+services:
+  gg-backend:
+    build: ../Backend
+    volumes:
+      - ./backend-uploads:/app/uploaded_files
+
+  gg-frontend:
+    build: ../Frontend
+
+  caddy:
+    image: caddy:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:Z
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:
