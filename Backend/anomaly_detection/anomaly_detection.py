@@ -1,11 +1,5 @@
-import pandas as pd
-import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
-from sklearn import svm
-
-from . import engine_coolant
-from .base_warning import BaseWarning, Severity
+from . import engine_coolant, catalytic
+from .base_warning import BaseWarning
 
 UPLOADED_FOLDER = "../uploaded_data"
 
@@ -18,10 +12,12 @@ class AnomalyDetectionModel():
     # will be expanded for other things soon!
     def __init__(self, data_path: str):
         self.engine_coolant = engine_coolant.EngineCoolantClassifier(data_path)
+        self.catalytic = catalytic.CatalyticClassifier()
 
     def generate_warnings(self, filepath) -> list[BaseWarning]:
         warnings = []
         warnings.extend(self.engine_coolant.generate_warnings(filepath))
+        warnings.extend(self.catalytic.generate_warnings(filepath))
         return warnings
 
 # for testing purposes only
