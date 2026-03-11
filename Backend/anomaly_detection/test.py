@@ -1,5 +1,4 @@
 import numpy as np
-import os
 import engine_coolant
 
 
@@ -61,12 +60,15 @@ normal_test = np.concatenate([idle_normal_test, drive_normal_test], axis=0)
 # combine all anomalous windows (idle + drive) for testing
 anomaly_test = np.concatenate(idle_anomalous + drive_anomalous, axis=0)
 
-# train classifier
-model, threshold = engine_coolant.train_oneclass_knn(train_normal)
+# initialise classifier so we can reuse its helper methods
+classifier = engine_coolant.EngineCoolantClassifier("../sample_data")
+
+# retrain on the exact training split used by this test
+knn, threshold = classifier.train_oneclass_knn(train_normal)
 
 # predict on combined test data
-normal_preds, _ = engine_coolant.detect_anomalies(model, threshold, normal_test)
-anomaly_preds, _ = engine_coolant.detect_anomalies(model, threshold, anomaly_test)
+normal_preds, _ = classifier.detect_anomalies(knn, threshold, normal_test)
+anomaly_preds, _ = classifier.detect_anomalies(knn, threshold, anomaly_test)
 
 # true labels
 y_true = np.concatenate([
@@ -90,13 +92,15 @@ fn = np.sum((y_true == 1) & (y_pred == 0))
 
 precision = tp / (tp + fp) if (tp + fp) > 0 else 0
 recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
 
 print("\n--- Engine Coolant Combined Idle + Drive Results ---")
 print("Accuracy:", round(float(accuracy), 4))
 print("Precision:", round(float(precision), 4))
 print("Recall:", round(float(recall), 4))
+print("F1 Score:", round(float(f1), 4))
 print("TP:", int(tp))
 print("TN:", int(tn))
 print("FP:", int(fp))
 print("FN:", int(fn))
-print("Threshold:", threshold)
+print("Threshold:", round(float(threshold), 6))

@@ -12,6 +12,8 @@ It detects:
 
 from __future__ import annotations
 
+from .base_warning import BaseWarning, Severity
+
 from typing import Any, Dict, List
 
 import pandas as pd
@@ -383,3 +385,58 @@ if __name__ == "__main__":
         print(f"Input error: {error}")
     except Exception as error:
         print(f"Unexpected error: {error}")
+
+class FuelTankWarning(BaseWarning):
+    """Warning object for fuel tank anomalies."""
+
+    def __init__(self, run_time: float, anomaly_type: str, message_text: str, severity: Severity) -> None:
+        super().__init__(run_time, severity)
+        self._anomaly_type = anomaly_type
+        self._message_text = message_text
+
+    def message(self) -> str:
+        return self._message_text
+
+    def type(self) -> str:
+        return self._anomaly_type
+
+
+class FuelTankClassifier:
+    """Wrapper class used by the main anomaly detection model."""
+
+    def generate_warnings(self, filepath) -> list[BaseWarning]:
+        """
+        Run the fuel tank anomaly detector and return warning objects.
+        """
+        import pandas as pd
+
+        df = pd.read_csv(filepath)
+        results = detect_fuel_tank_anomalies(df)
+
+        warnings: list[BaseWarning] = []
+
+        for _, row in results.iterrows():
+            severity_text = str(row["severity"]).lower()
+
+            if severity_text == "critical":
+                severity = Severity.CRITICAL
+            elif severity_text == "high":
+                severity = Severity.HIGH
+            elif severity_text == "medium":
+                severity = Severity.MEDIUM
+            else:
+                severity = Severity.LOW
+
+            # Use row index as fallback run_time if no real time column exists
+            run_time = float(row["row"])
+
+            warning = FuelTankWarning(
+                run_time=run_time,
+                anomaly_type=str(row["anomaly_type"]),
+                message_text=str(row["message"]),
+                severity=severity,
+            )
+
+            warnings.append(warning)
+
+        return warnings

@@ -1,21 +1,22 @@
-from . import engine_coolant, catalytic
+from . import engine_coolant, catalytic, fuel_tank
 from .base_warning import BaseWarning
 
 UPLOADED_FOLDER = "../uploaded_data"
 
 """
-This is a conglomeration of all the anomaly detection models
+This is a conglomeration of all the anomaly detection models.
 """
-class AnomalyDetectionModel():
+class AnomalyDetectionModel:
     # this will train the models to detect anomalies
-    # currently only supports fuel tank and engine coolant sensor warnings,
-    # will be expanded for other things soon!
+    # currently supports engine coolant, catalytic, and fuel tank warnings
     def __init__(self, data_path: str):
         self.engine_coolant = engine_coolant.EngineCoolantClassifier(data_path)
         self.catalytic = catalytic.CatalyticClassifier()
+        self.fuel_tank = fuel_tank.FuelTankClassifier()
 
     def generate_warnings(self, filepath) -> list[BaseWarning]:
         warnings = []
+        warnings.extend(self.fuel_tank.generate_warnings(filepath))
         warnings.extend(self.engine_coolant.generate_warnings(filepath))
         warnings.extend(self.catalytic.generate_warnings(filepath))
         return warnings
