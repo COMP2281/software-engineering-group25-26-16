@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
-
-from base_warning import Severity
-from base_warning import BaseWarning
+from .base_warning import Severity, BaseWarning
 
 
 # the amount that the outlet must be hotter than the inlet after TIME_THRESHOLD seconds have elapsed.
@@ -75,7 +73,7 @@ class CatalyticWarning(BaseWarning):
         super().__init__(run_time, severity=Severity.HIGH)
 
     def message(self) -> str:
-        return "Catalytic converter is not producing enough heat - might not be working correctly. Take your car to a mechanic to get it checked out especially if you also notice the following symptoms: a rotten egg smell, reduced fuel economy, and a rattling noise."
+        return "Catalytic converter is not producing enough heat - might not be working correctly. Take your car to a mechanic to get it checked out especially if you also notice the following symptoms: a rotten egg smell, reduced fuel economy, or a rattling noise."
 
 class CatalyticTooHotWarning(BaseWarning):
     def __init__(self, run_time: float) -> None:
@@ -85,8 +83,8 @@ class CatalyticTooHotWarning(BaseWarning):
         return "Catalytic converter is getting very hot - this could be a sign of a misfiring engine or other issue that is causing unburned fuel to enter the catalytic converter. This can cause damage to the converter and should be checked out by a mechanic as soon as possible."
 
 # for testing purposes only
-if __name__ == "__main__":
-    model = CatalyticClassifier()
-    warnings = model.generate_warnings(f"../sample_data/drive1test.csv")
-    for warning in warnings:
-        print(warning.to_dict())
+# if __name__ == "__main__":
+#     model = CatalyticClassifier()
+#     warnings = model.generate_warnings(f"../sample_data/drive1test.csv")
+#     for warning in warnings:
+#         print(warning.to_dict())
