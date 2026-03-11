@@ -1,13 +1,8 @@
 import React, { useEffect, useState } from "react";
-import type { FileUploadHandlerEvent } from "primereact/fileupload";
-import { FileUpload } from "primereact/fileupload";
-import { Button } from "primereact/button";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Sidebar } from "primereact/sidebar";
 
 import "../styles/pages.css";
 import "../styles/dashboard.css";
+import { Button } from "~/components/button";
 
 interface Warning {
   run_time: string;
@@ -47,17 +42,21 @@ export default function Upload() {
     }
   };
 
-  const onUpload = async (event: FileUploadHandlerEvent) => {
-    const file = event.files[0];
+  const onUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch(`/api/uploads/upload`, {
+      const response = await fetch("/api/uploads/upload", {
         method: "POST",
         credentials: "include",
         body: formData,
       });
-      if (response.ok) fetchFiles();
+      if (response.ok) {
+        // refresh page
+        window.location.reload();
+      }
     } catch (error) {
       console.error("Upload failed:", error);
     }
@@ -91,64 +90,27 @@ export default function Upload() {
           paddingBottom: "20px",
         }}
       >
-        <h1
-          style={{
-            fontSize: "2.5rem",
-            fontWeight: "800",
-            color: "var(--text-primary)",
-            letterSpacing: "-1px",
-          }}
-        >
-          Granite{" "}
-          <span style={{ color: "var(--primary-color)" }}>Guardian</span>
+        <h1>
+          Granite <span className="text-primary">Guardian</span>
         </h1>
         <p style={{ color: "var(--secondary-text)", fontSize: "1.1rem" }}>
           Intelligent OBD-II Diagnostic Management System
         </p>
       </header>
 
-      <div
-        className="alert_card"
-        style={{
-          borderLeft: "5px solid var(--primary-color)",
-          padding: "40px",
-          background: "var(--bg-white)",
-          boxShadow: "var(--shadow-md)",
-        }}
-      >
-        <h3 style={{ marginBottom: "20px", fontWeight: "600" }}>
-          Import New Vehicle Log
-        </h3>
-        <FileUpload
-          mode="advanced"
-          customUpload
-          uploadHandler={onUpload}
-          accept="text/csv"
-          maxFileSize={1000000}
-          chooseLabel="Browse"
-          uploadLabel="Analyze"
-          cancelLabel="Clear"
-          emptyTemplate={
-            <div style={{ textAlign: "center", padding: "20px" }}>
-              <p style={{ color: "var(--light-text)" }}>
-                Drag and drop .csv log files here for Granite-powered
-                diagnostics.
-              </p>
-            </div>
-          }
-        />
-      </div>
+      <h2>Upload Vehicle OBD-II Logs</h2>
+      <br />
+
+      <input
+        type="file"
+        name="fileupload"
+        accept=".csv"
+        onChange={onUpload}
+        className="cursor-pointer rounded-sm border border-gray-300 px-4 py-2 transition-colors duration-200 hover:bg-gray-100"
+      />
 
       <section style={{ marginTop: "50px" }}>
-        <h2
-          style={{
-            marginBottom: "25px",
-            fontSize: "1.5rem",
-            fontWeight: "700",
-          }}
-        >
-          Recent Vehicle Reports
-        </h2>
+        <h2>Uploaded Vehicle Reports</h2>
         <div className="summary_grid" style={{ gap: "25px" }}>
           {files === null ? (
             <p>Loading garage database...</p>
@@ -158,16 +120,7 @@ export default function Upload() {
             files.map((file) => (
               <div
                 key={file.id}
-                className="summary_card"
-                style={{
-                  transition: "transform 0.2s ease",
-                  border: "1px solid #eee",
-                  textAlign: "left",
-                  padding: "25px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                }}
+                className="summary_card cursor-pointer flex flex-col justify-between items-start p-6 border border-gray-200 transition-transform duration-200 hover:-translate-y-1"
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.transform = "translateY(-5px)")
                 }
@@ -205,61 +158,87 @@ export default function Upload() {
                     OBD-II Data Log
                   </span>
                 </div>
-                <Button
-                  label="View Insights"
-                  className="p-button-text p-button-sm"
-                  style={{
-                    padding: "0",
-                    marginTop: "20px",
-                    color: "var(--primary-color)",
-                    fontWeight: "bold",
-                  }}
-                />
               </div>
             ))
           )}
         </div>
       </section>
 
-      <Sidebar
-        visible={sidebarVisible}
-        onHide={() => setSidebarVisible(false)}
-        position="right"
-        style={{ width: "500px", padding: "2rem" }}
-      >
-        <h2 style={{ fontWeight: "800", marginBottom: "10px" }}>
-          Granite Insights
-        </h2>
-        <p style={{ color: "var(--light-text)", marginBottom: "30px" }}>
-          Log File: {selectedFileId}
-        </p>
-
-        <Button onClick={run_diagnostics}>Run Diagnostics</Button>
-
-        <DataTable value={warnings} className="p-datatable-sm" stripedRows>
-          <Column
-            field="run_time"
-            header="TIMESTAMP"
-            style={{ color: "var(--light-text)", fontSize: "0.8rem" }}
-          />
-          <Column field="message" header="DIAGNOSTIC SUMMARY" />
-        </DataTable>
-
+      {/* DARKEN AREA IF SIDEBAR IS SHOWING */}
+      {sidebarVisible && (
         <div
-          className="recommendation_box"
-          style={{
-            marginTop: "30px",
-            borderLeft: "3px solid var(--primary-color)",
-            background: "#f0f4ff",
-          }}
-        >
-          <strong>System Note:</strong>
-          <p>
-            These diagnostics are AI-generated for guidance and do not replace
-            professional mechanical inspection.
+          onClick={() => setSidebarVisible(false)}
+          className="z-10 fixed top-0 left-0 w-full h-full bg-black/50"
+        />
+      )}
+
+      {/* SIDEBAR FOR DIAGNOSTIC INSIGHTS */}
+      {sidebarVisible && (
+        <aside className="fixed top-0 right-0 h-full bg-background p-5 z-20 w-[60em] overflow-y-auto">
+          <h2>Granite Insights</h2>
+          <p style={{ color: "var(--light-text)", marginBottom: "30px" }}>
+            Log File:{" "}
+            {files?.find((f) => f.id === selectedFileId)?.filename || "N/A"}
           </p>
-        </div>
-      </Sidebar>
+
+          <Button onClick={run_diagnostics}>Run Diagnostics</Button>
+
+          {warnings.length > 0 && (
+            <table className="table-auto w-full mt-5">
+              <thead>
+                <tr className="bg-gray-100 p-2 [&>th]:text-left [&>th]:py-3 [&>th]:px-2">
+                  <th
+                    style={{ color: "var(--light-text)", fontSize: "0.8rem" }}
+                  >
+                    TIMESTAMP
+                  </th>
+                  {/* Align left */}
+                  <th className="text-left">DIAGNOSTIC SUMMARY</th>
+                </tr>
+              </thead>
+              <tbody className="[&>tr>td]:py-3 [&>tr>td]:px-2 [&>tr:nth-child(odd)]:bg-gray-50">
+                {warnings.map((warning, index) => {
+                  return (
+                    <tr key={index}>
+                      <td
+                        style={{
+                          color: "var(--light-text)",
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        {warning.run_time}
+                      </td>
+                      <td>{warning.message}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+
+          {warnings.length === 0 && (
+            <p>
+              No diagnostics run yet. Click "Run Diagnostics" to analyze the
+              selected log file.
+            </p>
+          )}
+
+          <div
+            className="recommendation_box"
+            style={{
+              marginTop: "30px",
+              borderLeft: "3px solid var(--primary-color)",
+              background: "#f0f4ff",
+            }}
+          >
+            <strong>System Note:</strong>
+            <p>
+              These diagnostics are AI-generated for guidance and do not replace
+              professional mechanical inspection.
+            </p>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }

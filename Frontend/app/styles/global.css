@@ -48,16 +48,24 @@
     --sidebar-width-collapsed: 60px;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+@theme {
+    --color-primary: var(--primary-color);
+    --color-background: var(--bg-main);
+
 }
 
 body {
     font-family: Arial, sans-serif;
     color: var(--text-primary);
     background-color: var(--bg-main);
+}
+
+h1 {
+    @apply text-5xl font-bold mb-6;
+}
+
+h2 {
+    @apply text-2xl font-bold mb-4;
 }
 
 .app_container {

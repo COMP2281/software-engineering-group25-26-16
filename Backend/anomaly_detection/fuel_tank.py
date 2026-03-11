@@ -23,7 +23,7 @@ import pandas as pd
 # Required columns
 # -----------------------------
 FUEL_COLUMN = "FUEL TANK"
-SPEED_COLUMN = "VEHICLE_SPEED"
+SPEED_COLUMN = "VEHICLE SPEED"
 
 
 # -----------------------------

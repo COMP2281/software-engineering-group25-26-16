@@ -1,25 +1,12 @@
-import React from 'react';
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from 'react-router';
-import { PrimeReactProvider, PrimeReactContext } from 'primereact/api';
-import './styles/global.css';
-import './styles/index.css';
-import './styles/dashboard.css';
-import './styles/chatbot.css';
-import "primereact/resources/themes/lara-light-cyan/theme.css";
-import { Button } from 'primereact/button';
+import React from "react";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import "./styles/global.css";
+import "./styles/index.css";
+import "./styles/dashboard.css";
+import "./styles/chatbot.css";
 
 export default function App() {
-    return (
-        <PrimeReactProvider>
-            <AppInner />
-        </PrimeReactProvider>
-    );
+  return <AppInner />;
 }
 
 function AppInner() {
@@ -38,5 +25,4 @@ function AppInner() {
       </body>
     </html>
   );
-
 }
