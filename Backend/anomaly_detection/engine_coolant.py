@@ -307,7 +307,7 @@ class EngineCoolantClassifier():
 
 class EngineCoolantWarning(BaseWarning):
     def __init__(self, run_time: float) -> None:
-        super().__init__(run_time, severity=Severity.HIGH)
+        super().__init__(run_time, severity=Severity.MEDIUM)
 
     def message(self) -> str:
-        return "Engine coolant temperature anomaly detected."
+        return "Engine coolant temperature anomaly detected. This can be caused by noise in the sensor. If you see this message very often, get it checked by a mechanic."
