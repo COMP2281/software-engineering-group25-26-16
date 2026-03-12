@@ -3,6 +3,8 @@ services:
     build: ../Backend
     volumes:
       - ./backend-uploads:/app/uploaded_files
+    environment:
+      - OLLAMA_HOST=ollama:11434
 
   gg-frontend:
     build: ../Frontend
@@ -16,6 +18,16 @@ services:
       - caddy-data:/data
       - caddy-config:/config
 
+  ollama:
+      image: ollama/ollama:latest
+      volumes:
+        - ollama:/root/.ollama
+        - ./run_ollama.sh:/scripts/run_ollama.sh:Z
+      ports:
+        - "11434:11434"
+      entrypoint: ["/bin/sh", "/scripts/run_ollama.sh"]
+
 volumes:
   caddy-data:
   caddy-config:
+  ollama:
