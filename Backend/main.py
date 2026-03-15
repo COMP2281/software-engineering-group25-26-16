@@ -123,6 +123,12 @@ async def login(
         "message": "Login successful",
     };
 
+@app.post("/auth/logout", tags=["Authentication"])
+async def logout(response: Response):
+    """Logout by clearing the auth cookie"""
+    response.delete_cookie(key="access_token", path="/")
+    return {"message": "Logout successful"}
+
 
 @app.get("/auth/me", tags=["Authentication"])
 async def get_current_user(
