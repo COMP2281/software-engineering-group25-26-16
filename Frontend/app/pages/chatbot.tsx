@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Bot, Plus, Trash2 } from 'lucide-react';
+
 import '../styles/pages.css';
 import '../styles/chatbot.css';
 
@@ -26,7 +27,7 @@ export default function Chatbot() {
 
   // Load saved chats when the page first opens
   useEffect(() => {
-    loadSessions();
+    loadSessions(true);
   }, []);
 
   // Always scroll to the newest message
@@ -46,7 +47,7 @@ export default function Chatbot() {
     setHasStarted(true);
   };
 
-  const loadSessions = async () => {
+  const loadSessions = async (autoOpenLatest = false) => {
     try {
       const response = await fetch('/api/chat/sessions', {
         method: 'GET',
@@ -55,6 +56,8 @@ export default function Chatbot() {
 
       if (!response.ok) {
         console.error('Failed to load chat sessions:', response.status);
+
+
 
         if (response.status === 401) {
           setSessions([]);
@@ -66,13 +69,14 @@ export default function Chatbot() {
       const data = await response.json();
       setSessions(data);
 
-      // Open the newest chat automatically if one exists
-      if (data.length > 0) {
+      // open latest chat
+      if (autoOpenLatest && data.length > 0) {
         const latestSessionId = data[0].id;
         setActiveSessionId(latestSessionId);
         setHasStarted(true);
         loadMessages(latestSessionId);
       }
+
     } catch (error) {
       console.error('Error loading sessions:', error);
     }

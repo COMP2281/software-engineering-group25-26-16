@@ -204,14 +204,14 @@
   width: 260px;
   flex-shrink: 0;
   height: 100%;
-  background-color: #171717; /* Dark background like ChatGPT */
+  background-color: rgb(70,80,180); /* Dark background like ChatGPT */
   color: white;
   padding: 20px 12px;
   overflow-y: auto;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border: none;
   display: flex;
   flex-direction: column;
-  box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.1);
+
 }
 
 .new_chat_button {
