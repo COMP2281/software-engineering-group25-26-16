@@ -23,18 +23,6 @@ async def upload_file(file: UploadFile, user = Depends(get_current_user), db: Se
         "message": "File uploaded successfully.",
     }
 
-    # diagnostics = diagnostics_service.run_diagnostics(result["filename"])
-    #
-    # return {
-    #     "message": f"File '{result['filename']}' uploaded and analysed successfully.",
-    #     "filename": result["filename"],
-    #     "rows_parsed": result["rows_parsed"],
-    #     "columns": result["columns"],
-    #     "recognised_sensors": result["recognised_sensors"],
-    #     "duplicates_removed": result["duplicates_removed"],
-    #     "diagnostics": diagnostics,
-    # }
-
 
 @router.get("/list")
 async def list_uploads(user = Depends(get_current_user), db: Session = Depends(get_db)):

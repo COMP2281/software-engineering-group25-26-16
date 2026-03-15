@@ -6,7 +6,6 @@ Uses Ollama to run Granite locally for generating user-friendly diagnostics.
 from fastapi import HTTPException
 from config import GRANITE_MODEL
 from services.validators import validate_filename
-from services.diagnostics_service import run_diagnostics
 
 
 def _build_prompt(warnings: list[dict], filename: str, alert_index: int | None = None) -> str:

@@ -35,9 +35,13 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
   );
 }
 
-function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
-  const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
-
+function DiagnosticsChart({
+  warnings,
+  setSelectedWarning,
+}: {
+  warnings: Warning[];
+  setSelectedWarning: (w: Warning) => void;
+}) {
   // get unique types of warnings and assign id to each one
   const types = Array.from(new Set(warnings.map((w) => w.type)));
 
@@ -123,20 +127,29 @@ function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
       chart_ref.current.update();
     }
   };
-
   return (
     <>
-      <h2>Diagnostic Timeline</h2>
       <Scatter ref={chart_ref} data={data} options={options} />
 
       <Button onClick={reset_zoom}>Reset Zoom</Button>
       <Button onClick={full_scale}>Show Full</Button>
+    </>
+  );
+}
 
-      {selectedWarning && (
-        <>
-          <DiagnosticInfo warning={selectedWarning} />
-        </>
-      )}
+function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
+  const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
+
+  return (
+    <>
+      <h2>Diagnostic Timeline</h2>
+
+      <DiagnosticsChart
+        warnings={warnings}
+        setSelectedWarning={setSelectedWarning}
+      />
+
+      {selectedWarning && <DiagnosticInfo warning={selectedWarning} />}
     </>
   );
 }
@@ -150,8 +163,9 @@ export default function Diagnostics({
 }) {
   const [warnings, setWarnings] = useState<Warning[]>([]);
 
-  const run_diagnostics = async () => {
-    if (!selectedFileId) return;
+  const run_diagnostics = async (selectedFileId: number | null) => {
+    console.log("Running diagnostics for file ID:", selectedFileId);
+    if (selectedFileId === null) return;
     try {
       const response = await fetch(`/api/diagnostics/${selectedFileId}`, {
         method: "GET",
@@ -166,6 +180,12 @@ export default function Diagnostics({
     }
   };
 
+  // run diagnostics when file is selected
+  useEffect(() => {
+    run_diagnostics(selectedFileId);
+  }, [selectedFileId]);
+
+  // <Button onClick={run_diagnostics}>Run Diagnostics</Button>
   return (
     <aside className="fixed top-0 right-0 h-full bg-background p-5 z-20 w-[60em] overflow-y-auto">
       <h2>Granite Insights</h2>
@@ -174,16 +194,8 @@ export default function Diagnostics({
         {files?.find((f) => f.id === selectedFileId)?.filename || "N/A"}
       </p>
 
-      <Button onClick={run_diagnostics}>Run Diagnostics</Button>
-
       {warnings.length > 0 && <DiagnosticsChartArea warnings={warnings} />}
-
-      {warnings.length === 0 && (
-        <p>
-          No diagnostics run yet. Click "Run Diagnostics" to analyze the
-          selected log file.
-        </p>
-      )}
+      {warnings.length === 0 && <p>Diagnostics are running...</p>}
 
       <div
         className="recommendation_box"

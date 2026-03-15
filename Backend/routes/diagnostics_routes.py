@@ -4,6 +4,7 @@ All business logic is delegated to services/diagnostics_service.py.
 """
 
 from fastapi import APIRouter, Query
+from sqlalchemy import update
 from anomaly_detection.base_warning import BaseWarning
 from models.schemas import SensorToggleRequest
 from services import diagnostics_service
@@ -26,7 +27,6 @@ def get_model():
 @router.get("/{file_id}")
 async def run_diagnostics(
     file_id: int,
-    force_rescan: bool = Query(default=False, description="Force re-scan even if cached results exist"),
     user = Depends(get_current_user),
     model = Depends(get_model),
     db: Session = Depends(get_db)
@@ -37,7 +37,18 @@ async def run_diagnostics(
     if file is None:
         return {"error": "File not found"}, 404
 
-    """Run anomaly detection on an uploaded CSV file. Results are cached unless force_rescan=true."""
+    if bool(file.diagnostics_ran):
+        # fetch warnings from database
+        print(f"Diagnostics already ran for file_id {file_id}, fetching warnings from database.")
+        file_warnings = db.query(FileWarning).filter(FileWarning.file_id == file_id).all()
+
+        return [{
+            "run_time": w.run_time,
+            "severity": w.severity,
+            "warning_type": w.warning_type,
+            "message": w.message,
+        } for w in file_warnings]
+
     path = os.path.join("uploaded_data", str(user.id), str(file.filename))
     warnings: list[BaseWarning] = model.generate_warnings(path)
 
@@ -50,7 +61,15 @@ async def run_diagnostics(
         run_time=w.run_time(),
         warning_type=w.type(),
         message=w.message(),
+        severity=w.severity().value,
     ) for w in warnings)
+
+    # mark diagnostics as run
+    db.execute(
+        update(UploadedFile)
+        .where(UploadedFile.id == file_id)
+        .values(diagnostics_ran=True)
+    )
 
     db.commit()
 
