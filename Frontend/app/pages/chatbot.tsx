@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Plus, Trash2 } from 'lucide-react';
+import { Send, User, Bot, Plus, Trash2, Menu } from 'lucide-react';
 
 import '../styles/pages.css';
 import '../styles/chatbot.css';
@@ -23,6 +23,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load saved chats when the page first opens
@@ -288,6 +289,17 @@ export default function Chatbot() {
   return (
     <div className="chatbot_page_container">
       <div className={`chatbot_header ${hasStarted ? 'started' : 'centered'}`}>
+
+        {hasStarted && (
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="sidebar_toggle_button"
+            title="Toggle Sidebar"
+          >
+            <Menu size={24} />
+          </button>
+        )}
+
         <h1 className="chatbot_main_title">
           Granite <span style={{ color: 'var(--primary-color)' }}>Guardian</span>
         </h1>
@@ -318,7 +330,7 @@ export default function Chatbot() {
 
       {hasStarted && (
         <div className="chatbot_content_row">
-          <aside className="chat_sidebar">
+          <aside className={`chat_sidebar ${!isSidebarOpen ? 'closed' : ''}`}>
             <button
               onClick={createNewChat}
               className="new_chat_button"
@@ -377,7 +389,7 @@ export default function Chatbot() {
       )}
 
       {hasStarted && (
-        <div className="chatbot_bottom_search fade_in_up">
+        <div className={`chatbot_bottom_search fade_in_up ${!isSidebarOpen ? 'expanded' : ''}`}>
           <div className="search_input_wrapper bottom_wrapper">
             <input
               type="text"

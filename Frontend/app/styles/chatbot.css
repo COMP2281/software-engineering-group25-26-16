@@ -211,7 +211,7 @@
   border: none;
   display: flex;
   flex-direction: column;
-
+  transition: width 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
 }
 
 .new_chat_button {
@@ -325,4 +325,47 @@
   padding: 1.5rem;
   padding-bottom: 120px;
   scroll-behavior: smooth;
+}
+
+/* Animates the sidebar sliding away */
+.chat_sidebar {
+  transition: width 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+}
+
+.chat_sidebar.closed {
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
+/* Animates the bottom search bar stretching to the left edge */
+.chatbot_bottom_search {
+  transition: left 0.3s ease;
+}
+
+.chatbot_bottom_search.expanded {
+  left: 0;
+}
+
+/* Styles the new toggle button */
+.sidebar_toggle_button {
+  position: absolute;
+  left: 1rem;
+  top: 0.8rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--text-primary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.sidebar_toggle_button:hover {
+  background-color: #e2e8f0;
 }
