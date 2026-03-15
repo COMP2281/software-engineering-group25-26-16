@@ -191,7 +191,8 @@
 .chat_sidebar {
   width: 260px;
   flex-shrink: 0;
-
+  background-color: black;
+  height: 100%;
   /* pushes the sidebar down so it aligns with the chat area */
   padding: 110px 16px 0 0;
 
