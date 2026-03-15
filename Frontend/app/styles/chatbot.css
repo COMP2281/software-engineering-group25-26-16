@@ -99,9 +99,21 @@
 
 /* Bottom Search Bar */
 .chatbot_bottom_search {
+  position: absolute;
+  bottom: 0;
+  left: 260px; /* Offset exactly by the sidebar width! */
+  right: 0;
+  padding: 20px;
   display: flex;
   justify-content: center;
-  padding: 1em;
+  /* Adds a smooth fade so messages disappear behind the input box */
+  background: linear-gradient(transparent, var(--bg-main) 40%);
+  pointer-events: none; /* Lets you click through the invisible gradient */
+}
+
+/* Make sure the input wrapper catches clicks again */
+.chatbot_bottom_search .search_input_wrapper {
+  pointer-events: auto;
 }
 
 .bottom_wrapper {
@@ -191,12 +203,14 @@
 .chat_sidebar {
   width: 260px;
   flex-shrink: 0;
-  background-color: black;
   height: 100%;
-  /* pushes the sidebar down so it aligns with the chat area */
-  padding: 110px 16px 0 0;
-
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #171717; /* Dark background like ChatGPT */
+  color: white;
+  padding: 20px 12px;
+  overflow-y: auto;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .new_chat_button {
