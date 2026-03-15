@@ -2,26 +2,13 @@ import React, { useEffect, useState } from "react";
 
 import "../styles/pages.css";
 import "../styles/dashboard.css";
-import { Button } from "~/components/button";
-
-interface Warning {
-  run_time: string;
-  severity: string;
-  type: string;
-  message: string;
-}
-
-interface File {
-  user_id: number;
-  filename: string;
-  id: number;
-}
+import Diagnostics from "./diagnostics";
+import type { File } from "~/types";
 
 export default function Upload() {
   const [files, setFiles] = useState<File[] | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
-  const [warnings, setWarnings] = useState<Warning[]>([]);
 
   useEffect(() => {
     fetchFiles();
@@ -59,22 +46,6 @@ export default function Upload() {
       }
     } catch (error) {
       console.error("Upload failed:", error);
-    }
-  };
-
-  const run_diagnostics = async () => {
-    if (!selectedFileId) return;
-    try {
-      const response = await fetch(`/api/diagnostics/${selectedFileId}`, {
-        method: "GET",
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setWarnings(data);
-      }
-    } catch (error) {
-      console.error("Diagnostics failed:", error);
     }
   };
 
@@ -174,70 +145,7 @@ export default function Upload() {
 
       {/* SIDEBAR FOR DIAGNOSTIC INSIGHTS */}
       {sidebarVisible && (
-        <aside className="fixed top-0 right-0 h-full bg-background p-5 z-20 w-[60em] overflow-y-auto">
-          <h2>Granite Insights</h2>
-          <p style={{ color: "var(--light-text)", marginBottom: "30px" }}>
-            Log File:{" "}
-            {files?.find((f) => f.id === selectedFileId)?.filename || "N/A"}
-          </p>
-
-          <Button onClick={run_diagnostics}>Run Diagnostics</Button>
-
-          {warnings.length > 0 && (
-            <table className="table-auto w-full mt-5">
-              <thead>
-                <tr className="bg-gray-100 p-2 [&>th]:text-left [&>th]:py-3 [&>th]:px-2">
-                  <th
-                    style={{ color: "var(--light-text)", fontSize: "0.8rem" }}
-                  >
-                    TIMESTAMP
-                  </th>
-                  {/* Align left */}
-                  <th className="text-left">DIAGNOSTIC SUMMARY</th>
-                </tr>
-              </thead>
-              <tbody className="[&>tr>td]:py-3 [&>tr>td]:px-2 [&>tr:nth-child(odd)]:bg-gray-50">
-                {warnings.map((warning, index) => {
-                  return (
-                    <tr key={index}>
-                      <td
-                        style={{
-                          color: "var(--light-text)",
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        {warning.run_time}
-                      </td>
-                      <td>{warning.message}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-
-          {warnings.length === 0 && (
-            <p>
-              No diagnostics run yet. Click "Run Diagnostics" to analyze the
-              selected log file.
-            </p>
-          )}
-
-          <div
-            className="recommendation_box"
-            style={{
-              marginTop: "30px",
-              borderLeft: "3px solid var(--primary-color)",
-              background: "#f0f4ff",
-            }}
-          >
-            <strong>System Note:</strong>
-            <p>
-              These diagnostics are AI-generated for guidance and do not replace
-              professional mechanical inspection.
-            </p>
-          </div>
-        </aside>
+        <Diagnostics files={files} selectedFileId={selectedFileId} />
       )}
     </div>
   );

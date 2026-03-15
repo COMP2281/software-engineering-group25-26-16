@@ -10,7 +10,7 @@ export function Button({
   style?: React.CSSProperties;
 }) {
   const base_classes =
-    "rounded-sm p-5 px-4 py-2 transition-colors duration-200";
+    "rounded-sm p-5 px-4 py-2 transition-colors duration-200 m-1";
   return (
     <button
       onClick={onClick}

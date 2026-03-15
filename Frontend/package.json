@@ -11,9 +11,12 @@
   "dependencies": {
     "@react-router/node": "^7.9.2",
     "@react-router/serve": "^7.9.2",
+    "chart.js": "^4.5.1",
+    "chartjs-plugin-zoom": "^2.2.0",
     "isbot": "^5.1.31",
     "lucide-react": "^0.563.0",
     "react": "^19.1.1",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.1.1",
     "react-router": "^7.9.2",
     "tailwindcss": "^4.2.1"

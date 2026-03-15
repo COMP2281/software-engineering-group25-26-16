@@ -1,0 +1,204 @@
+import type { File } from "~/types";
+import type { Warning } from "~/types";
+import { Button } from "~/components/button";
+import { useEffect, useRef, useState } from "react";
+import { Chart } from "chart.js/auto";
+import { Scatter } from "react-chartjs-2";
+
+function DiagnosticInfo({ warning }: { warning: Warning }) {
+  let severityColour = "border-green-400";
+  if (warning.severity === "low") {
+    severityColour = "border-green-400";
+  } else if (warning.severity === "medium") {
+    severityColour = "border-orange-400";
+  } else if (warning.severity === "high") {
+    severityColour = "border-red-500";
+  }
+  return (
+    <div
+      className={`rounded-sm p-4 mt-4 shadow-sm ${severityColour} border-l-3`}
+    >
+      <h2>Diagnostic Details</h2>
+      <p>
+        <strong>Type:</strong> {warning.type}
+      </p>
+      <p>
+        <strong>Severity:</strong> {warning.severity}
+      </p>
+      <p>
+        <strong>Run Time:</strong> {warning.run_time}s
+      </p>
+      <p>{warning.message}</p>
+
+      <Button onClick={() => {}}>Ask Granite</Button>
+    </div>
+  );
+}
+
+function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
+  const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
+
+  // get unique types of warnings and assign id to each one
+  const types = Array.from(new Set(warnings.map((w) => w.type)));
+
+  // x axis will be run_time, y axis will be type of warning, color will be severity
+  const data = {
+    datasets: warnings.map((w) => ({
+      label: w.type,
+      data: [{ x: w.run_time, y: types.indexOf(w.type) }],
+      backgroundColor:
+        w.severity === "high"
+          ? "red"
+          : w.severity === "medium"
+            ? "orange"
+            : "green",
+      radius: 7,
+    })),
+  };
+
+  const options = {
+    plugins: {
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+          pinch: {
+            enabled: true,
+          },
+          mode: "x",
+        },
+      },
+      legend: {
+        display: false,
+      },
+    },
+    onClick: (event: any, elements: any) => {
+      if (elements.length == 0) return;
+      setSelectedWarning(warnings[elements[0].datasetIndex]);
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: "Run Time (s)",
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: "Diagnostic Type",
+        },
+        ticks: {
+          display: false,
+        },
+        min: -3,
+        max: types.length + 3,
+      },
+    },
+  };
+
+  let chart_ref = useRef(null);
+
+  let reset_zoom = () => {
+    if (chart_ref.current) {
+      // @ts-ignore
+      chart_ref.current.options.scales.x.min = undefined;
+      // @ts-ignore
+      chart_ref.current.options.scales.x.max = undefined;
+      // @ts-ignore
+      chart_ref.current.update();
+    }
+  };
+
+  let full_scale = () => {
+    if (chart_ref.current) {
+      // make minimum x value 0 and maximum x value the maximum run_time
+      // @ts-ignore
+      chart_ref.current.options.scales.x.min = 0;
+      // @ts-ignore
+      chart_ref.current.options.scales.x.max =
+        Math.max(...warnings.map((w) => w.run_time)) + 5;
+      // @ts-ignore
+      chart_ref.current.update();
+    }
+  };
+
+  return (
+    <>
+      <h2>Diagnostic Timeline</h2>
+      <Scatter ref={chart_ref} data={data} options={options} />
+
+      <Button onClick={reset_zoom}>Reset Zoom</Button>
+      <Button onClick={full_scale}>Show Full</Button>
+
+      {selectedWarning && (
+        <>
+          <DiagnosticInfo warning={selectedWarning} />
+        </>
+      )}
+    </>
+  );
+}
+
+export default function Diagnostics({
+  files,
+  selectedFileId,
+}: {
+  files: File[] | null;
+  selectedFileId: number | null;
+}) {
+  const [warnings, setWarnings] = useState<Warning[]>([]);
+
+  const run_diagnostics = async () => {
+    if (!selectedFileId) return;
+    try {
+      const response = await fetch(`/api/diagnostics/${selectedFileId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWarnings(data);
+      }
+    } catch (error) {
+      console.error("Diagnostics failed:", error);
+    }
+  };
+
+  return (
+    <aside className="fixed top-0 right-0 h-full bg-background p-5 z-20 w-[60em] overflow-y-auto">
+      <h2>Granite Insights</h2>
+      <p style={{ color: "var(--light-text)", marginBottom: "30px" }}>
+        Log File:{" "}
+        {files?.find((f) => f.id === selectedFileId)?.filename || "N/A"}
+      </p>
+
+      <Button onClick={run_diagnostics}>Run Diagnostics</Button>
+
+      {warnings.length > 0 && <DiagnosticsChartArea warnings={warnings} />}
+
+      {warnings.length === 0 && (
+        <p>
+          No diagnostics run yet. Click "Run Diagnostics" to analyze the
+          selected log file.
+        </p>
+      )}
+
+      <div
+        className="recommendation_box"
+        style={{
+          marginTop: "30px",
+          borderLeft: "3px solid var(--primary-color)",
+          background: "#f0f4ff",
+        }}
+      >
+        <strong>System Note:</strong>
+        <p>
+          These diagnostics are AI-generated for guidance and do not replace
+          professional mechanical inspection.
+        </p>
+      </div>
+    </aside>
+  );
+}
