@@ -145,7 +145,13 @@ export default function Upload() {
 
       {/* SIDEBAR FOR DIAGNOSTIC INSIGHTS */}
       {sidebarVisible && (
-        <Diagnostics files={files} selectedFileId={selectedFileId} />
+        <Diagnostics
+          filename={
+            files?.filter((file) => file.id === selectedFileId)[0]?.filename ||
+            null
+          }
+          selectedFileId={selectedFileId}
+        />
       )}
     </div>
   );

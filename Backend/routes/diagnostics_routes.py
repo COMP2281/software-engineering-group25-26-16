@@ -14,6 +14,7 @@ from anomaly_detection.anomaly_detection import AnomalyDetectionModel
 from sqlalchemy.orm import Session
 from database import get_db
 from models.upload import FileWarning, UploadedFile
+from sqlalchemy import func
 import os
 
 router = APIRouter(prefix="/diagnostics", tags=["Diagnostics"])
@@ -23,6 +24,18 @@ model = AnomalyDetectionModel("sample_data/")
 
 def get_model():
     return model
+
+@router.get("/stats")
+async def diagnostic_stats(user = Depends(get_current_user), db: Session = Depends(get_db)):
+    # get number of all warnings for user for each file
+    # SELECT filename, count(filename) FROM uploaded_files WHERE user_id = :user_id GROUP BY filename
+
+    stats = db.query(UploadedFile.filename, UploadedFile.diagnostics_ran, UploadedFile.id, func.count(FileWarning.id)).join(FileWarning, UploadedFile.id == FileWarning.file_id, isouter=True).filter(UploadedFile.user_id == user.id).group_by(UploadedFile.filename).all()
+
+    for file in stats:
+        print(f"File: {file[0]}, Warning Count: {file[1]}")
+
+    return [{"filename": file[0], "diagnostics_ran": file[1], "id": file[2], "warning_count": file[3]} for file in stats]
 
 @router.get("/{file_id}")
 async def run_diagnostics(

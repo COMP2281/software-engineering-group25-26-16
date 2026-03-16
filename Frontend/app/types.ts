@@ -10,3 +10,10 @@ export interface File {
   filename: string;
   id: number;
 }
+
+export interface FileStats {
+  id: number;
+  filename: string;
+  warning_count: number;
+  diagnostics_ran: boolean;
+}

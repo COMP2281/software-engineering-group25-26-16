@@ -1,35 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../styles/pages.css";
 import "../styles/dashboard.css";
-
-const initialAlerts = [
-  {
-    id: 1,
-    severity: "high",
-    component: "Fuel Pump A",
-    title: "Pressure Drop Detected",
-    message:
-      "Fuel pump A is showing a 15% drop in pressure over the last 2 hours. This could indicate a potential leak or valve failure.",
-    recommendation:
-      "Initiate emergency diagnostic scan and inspect the primary valve.",
-  },
-  {
-    id: 2,
-    severity: "medium",
-    component: "Cooling System",
-    title: "Temperature Fluctuation",
-    message:
-      "Coolant temperature is fluctuating outside optimal parameters by 3 degrees.",
-    recommendation: "Verify coolant levels and monitor for the next hour.",
-  },
-];
+import type { FileStats } from "~/types";
+import { Button } from "~/components/button";
+import Diagnostics, { run_diagnostics } from "./diagnostics";
 
 function Dashboard() {
-  const [alerts, setAlerts] = useState(initialAlerts);
+  const [fileStats, setFileStats] = useState<FileStats[]>([]);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
 
-  const dismissAlert = (id: number) => {
-    setAlerts(alerts.filter((alert) => alert.id !== id));
-  };
+  function loadFileStats() {
+    // load file stats
+    fetch("/api/diagnostics/stats", {
+      method: "GET",
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then(setFileStats)
+      .catch((error) => console.error("Error fetching stats:", error));
+  }
+
+  useEffect(loadFileStats, []);
+
+  let fileStatsDiagnosticsRanSorted = useMemo(() => {
+    if (!fileStats) return [];
+    return fileStats
+      .filter((stat) => stat.diagnostics_ran)
+      .sort((a, b) => b.warning_count - a.warning_count);
+  }, [fileStats]);
+
+  let fileStatsDiagnosticsNotRan = useMemo(() => {
+    if (!fileStats) return [];
+    return fileStats.filter((stat) => !stat.diagnostics_ran);
+  }, [fileStats]);
 
   return (
     <div className="page_container bg-main min-h-screen">
@@ -49,79 +53,6 @@ function Dashboard() {
         </p>
       </header>
 
-      <div
-        className="summary_grid"
-        style={{ marginBottom: "50px", gap: "30px" }}
-      >
-        <div
-          className="summary_card"
-          style={{
-            borderTop: "4px solid var(--primary-color)",
-            textAlign: "left",
-            padding: "30px",
-            background: "white",
-            boxShadow: "var(--shadow-md)",
-          }}
-        >
-          <h4
-            style={{
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              fontSize: "0.75rem",
-              color: "var(--light-text)",
-              fontWeight: "bold",
-            }}
-          >
-            Active Alerts
-          </h4>
-          <div
-            className="summary_number"
-            style={{
-              fontSize: "3.5rem",
-              fontWeight: "800",
-              marginTop: "10px",
-              color: "var(--text-primary)",
-            }}
-          >
-            {alerts.length}
-          </div>
-        </div>
-
-        <div
-          className="summary_card"
-          style={{
-            borderTop: "4px solid var(--danger-color)",
-            textAlign: "left",
-            padding: "30px",
-            background: "white",
-            boxShadow: "var(--shadow-md)",
-          }}
-        >
-          <h4
-            style={{
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              fontSize: "0.75rem",
-              color: "var(--light-text)",
-              fontWeight: "bold",
-            }}
-          >
-            Critical Issues
-          </h4>
-          <div
-            className="summary_number critical"
-            style={{
-              fontSize: "3.5rem",
-              fontWeight: "800",
-              marginTop: "10px",
-              color: "var(--danger-color)",
-            }}
-          >
-            {alerts.filter((a) => a.severity === "high").length}
-          </div>
-        </div>
-      </div>
-
       <div className="alerts_section">
         <h2
           style={{
@@ -134,159 +65,66 @@ function Dashboard() {
           Recent Maintenance Alerts
         </h2>
 
-        {alerts.length === 0 ? (
-          <div
-            className="no_alerts"
-            style={{
-              padding: "60px",
-              borderRadius: "12px",
-              textAlign: "center",
-              background: "white",
-              color: "var(--success-color)",
-              boxShadow: "var(--shadow-sm)",
-            }}
-          >
-            <p style={{ fontSize: "1.2rem", fontWeight: "600" }}>
-              All systems normal. No active alerts!
-            </p>
+        <div className="flex gap-4 flex-row">
+          <div className="flex gap-2 flex-col flex-1">
+            {fileStats &&
+              fileStatsDiagnosticsRanSorted.map((stat) => (
+                <div className="diagnostic_card border-primary">
+                  <h2>{stat.filename}</h2>
+                  <p>
+                    {stat.warning_count}{" "}
+                    {stat.warning_count == 1 ? "warning" : "warnings"}
+                  </p>
+                </div>
+              ))}
           </div>
-        ) : (
-          alerts.map((alert) => (
-            <div
-              key={alert.id}
-              className={`alert_card ${alert.severity}`}
-              style={{
-                background: "white",
-                borderRadius: "12px",
-                padding: "30px",
-                marginBottom: "25px",
-                boxShadow: "var(--shadow-md)",
-                borderLeft: `6px solid ${alert.severity === "high" ? "var(--danger-color)" : "var(--warning-color)"}`,
-                transition: "transform 0.2s ease",
-              }}
-            >
-              <div
-                className="alert_header"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span
-                  className="badge_component"
-                  style={{
-                    background: "#f1f5f9",
-                    color: "#475569",
-                    borderRadius: "6px",
-                    padding: "6px 12px",
-                    fontWeight: "bold",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  {alert.component}
-                </span>
-                <span
-                  className="badge_severity"
-                  style={{
-                    backgroundColor:
-                      alert.severity === "high"
-                        ? "var(--danger-color)"
-                        : "var(--warning-color)",
-                    borderRadius: "20px",
-                    padding: "4px 15px",
-                    fontSize: "0.7rem",
-                    fontWeight: "800",
-                    color: "white",
-                  }}
-                >
-                  {alert.severity.toUpperCase()}
-                </span>
-              </div>
 
-              <h3
-                className="alert_title"
-                style={{
-                  fontSize: "1.4rem",
-                  fontWeight: "700",
-                  marginTop: "15px",
-                  color: "var(--text-primary)",
-                }}
-              >
-                {alert.title}
-              </h3>
-              <p
-                className="alert_message"
-                style={{
-                  fontSize: "1.05rem",
-                  lineHeight: "1.6",
-                  color: "var(--secondary-text)",
-                  margin: "15px 0",
-                }}
-              >
-                {alert.message}
-              </p>
-
-              <div
-                className="recommendation_box"
-                style={{
-                  background: "#fffbeb",
-                  borderLeft: "4px solid #f59e0b",
-                  padding: "20px",
-                  borderRadius: "8px",
-                }}
-              >
-                <strong
-                  style={{
-                    color: "#92400e",
-                    fontSize: "0.9rem",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Granite Recommendation:
-                </strong>
-                <p
-                  style={{
-                    color: "#b45309",
-                    marginTop: "5px",
-                    fontSize: "1rem",
-                  }}
-                >
-                  {alert.recommendation}
-                </p>
-              </div>
-
-              <div style={{ textAlign: "right", marginTop: "20px" }}>
-                <button
-                  className="button_mark_read"
-                  onClick={() => dismissAlert(alert.id)}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid #cbd5e1",
-                    color: "#64748b",
-                    padding: "8px 20px",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseOver={(e) =>
-                    (e.currentTarget.style.background = "#f8fafc")
-                  }
-                  onMouseOut={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
-                >
-                  Mark as Read
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+          <div className="flex gap-2 flex-col flex-1">
+            {fileStats &&
+              fileStatsDiagnosticsNotRan.map((stat) => (
+                <div className="diagnostic_card border-red-500 flex flex-row justify-between">
+                  <div className="flex flex-col">
+                    <h2>{stat.filename}</h2>
+                    <p>
+                      {stat.warning_count}{" "}
+                      {stat.warning_count == 1 ? "warning" : "warnings"}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <Button
+                      onClick={() =>
+                        run_diagnostics(stat.id).then(loadFileStats)
+                      }
+                    >
+                      Run Diagnostics
+                    </Button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
+
+      {/* DARKEN AREA IF SIDEBAR IS SHOWING */}
+      {sidebarVisible && (
+        <div
+          onClick={() => setSidebarVisible(false)}
+          className="z-10 fixed top-0 left-0 w-full h-full bg-black/50"
+        />
+      )}
+
+      {/* SIDEBAR FOR DIAGNOSTIC INSIGHTS */}
+      {sidebarVisible && (
+        <Diagnostics
+          filename={
+            fileStats.filter((stat) => stat.id === selectedFileId)[0]
+              ?.filename || null
+          }
+          selectedFileId={selectedFileId}
+        />
+      )}
     </div>
   );
 }
 
 export default Dashboard;
-

@@ -15,9 +15,7 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
     severityColour = "border-red-500";
   }
   return (
-    <div
-      className={`rounded-sm p-4 mt-4 shadow-sm ${severityColour} border-l-3`}
-    >
+    <div className={`diagnostic_card ${severityColour}`}>
       <h2>Diagnostic Details</h2>
       <p>
         <strong>Type:</strong> {warning.type}
@@ -154,44 +152,43 @@ function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
   );
 }
 
+export async function run_diagnostics(selectedFileId: number | null) {
+  console.log("Running diagnostics for file ID:", selectedFileId);
+  if (selectedFileId === null) return;
+  try {
+    const response = await fetch(`/api/diagnostics/${selectedFileId}`, {
+      method: "GET",
+      credentials: "include",
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    }
+  } catch (error) {
+    console.error("Diagnostics failed:", error);
+  }
+  return [];
+}
+
 export default function Diagnostics({
-  files,
+  filename,
   selectedFileId,
 }: {
-  files: File[] | null;
+  filename: string | null;
   selectedFileId: number | null;
 }) {
   const [warnings, setWarnings] = useState<Warning[]>([]);
 
-  const run_diagnostics = async (selectedFileId: number | null) => {
-    console.log("Running diagnostics for file ID:", selectedFileId);
-    if (selectedFileId === null) return;
-    try {
-      const response = await fetch(`/api/diagnostics/${selectedFileId}`, {
-        method: "GET",
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setWarnings(data);
-      }
-    } catch (error) {
-      console.error("Diagnostics failed:", error);
-    }
-  };
-
   // run diagnostics when file is selected
   useEffect(() => {
-    run_diagnostics(selectedFileId);
+    run_diagnostics(selectedFileId).then(setWarnings);
   }, [selectedFileId]);
 
-  // <Button onClick={run_diagnostics}>Run Diagnostics</Button>
   return (
     <aside className="fixed top-0 right-0 h-full bg-background p-5 z-20 w-[60em] overflow-y-auto">
       <h2>Granite Insights</h2>
       <p style={{ color: "var(--light-text)", marginBottom: "30px" }}>
-        Log File:{" "}
-        {files?.find((f) => f.id === selectedFileId)?.filename || "N/A"}
+        Log File: {filename || "N/A"}
       </p>
 
       {warnings.length > 0 && <DiagnosticsChartArea warnings={warnings} />}
