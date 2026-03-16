@@ -3,7 +3,7 @@ import type { Warning } from "~/types";
 import { Button } from "~/components/button";
 import { useEffect, useRef, useState } from "react";
 import { Chart } from "chart.js/auto";
-import { Scatter } from "react-chartjs-2";
+import { Bar, Scatter } from "react-chartjs-2";
 
 function DiagnosticInfo({ warning }: { warning: Warning }) {
   let severityColour = "border-green-400";
@@ -16,7 +16,7 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
   }
   return (
     <div className={`diagnostic_card ${severityColour}`}>
-      <h2>Diagnostic Details</h2>
+      <h3>Diagnostic Details</h3>
       <p>
         <strong>Type:</strong> {warning.type}
       </p>
@@ -31,6 +31,49 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
       <Button onClick={() => {}}>Ask Granite</Button>
     </div>
   );
+}
+
+function WarningTypeFrequencyChart({ warnings }: { warnings: Warning[] }) {
+  // get unique types of warnings and assign id to each one
+  const types = Array.from(new Set(warnings.map((w) => w.type)));
+
+  const data = {
+    labels: types,
+    datasets: [
+      {
+        label: "Warning Type Frequency",
+        data: types.map(
+          (type) => warnings.filter((w) => w.type === type).length,
+        ),
+        backgroundColor: "rgba(75, 192, 192, 0.5)",
+      },
+    ],
+  };
+
+  const options = {
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: "Diagnostic Type",
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: "Frequency",
+        },
+        beginAtZero: true,
+      },
+    },
+  };
+
+  return <Bar data={data} options={options} />;
 }
 
 function DiagnosticsChart({
@@ -135,18 +178,37 @@ function DiagnosticsChart({
   );
 }
 
+type GraphShown = "frequency" | "timeline";
+
 function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
   const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
+  const [graphShown, setGraphShown] = useState<GraphShown>("timeline");
 
   return (
     <>
-      <h2>Diagnostic Timeline</h2>
-
-      <DiagnosticsChart
-        warnings={warnings}
-        setSelectedWarning={setSelectedWarning}
-      />
-
+      <h3>Diagnostic Timeline</h3>
+      <p>
+        <i className="text-gray-500">
+          {warnings.length} {warnings.length === 1 ? "warning" : "warnings"}
+        </i>
+      </p>
+      {graphShown == "frequency" && (
+        <Button onClick={() => setGraphShown("timeline")}>Show Timeline</Button>
+      )}
+      {graphShown == "timeline" && (
+        <Button onClick={() => setGraphShown("frequency")}>
+          By Warning Frequency
+        </Button>
+      )}
+      {graphShown == "frequency" && (
+        <WarningTypeFrequencyChart warnings={warnings} />
+      )}
+      {graphShown == "timeline" && (
+        <DiagnosticsChart
+          warnings={warnings}
+          setSelectedWarning={setSelectedWarning}
+        />
+      )}
       {selectedWarning && <DiagnosticInfo warning={selectedWarning} />}
     </>
   );
@@ -178,10 +240,14 @@ export default function Diagnostics({
   selectedFileId: number | null;
 }) {
   const [warnings, setWarnings] = useState<Warning[]>([]);
+  const [diagnosticsRunning, setDiagnosticsRunning] = useState(false);
 
   // run diagnostics when file is selected
   useEffect(() => {
-    run_diagnostics(selectedFileId).then(setWarnings);
+    setDiagnosticsRunning(true);
+    run_diagnostics(selectedFileId)
+      .then(setWarnings)
+      .then(() => setDiagnosticsRunning(false));
   }, [selectedFileId]);
 
   return (
@@ -191,8 +257,8 @@ export default function Diagnostics({
         Log File: {filename || "N/A"}
       </p>
 
-      {warnings.length > 0 && <DiagnosticsChartArea warnings={warnings} />}
-      {warnings.length === 0 && <p>Diagnostics are running...</p>}
+      {!diagnosticsRunning && <DiagnosticsChartArea warnings={warnings} />}
+      {diagnosticsRunning && <p>Diagnostics are running...</p>}
 
       <div
         className="recommendation_box"

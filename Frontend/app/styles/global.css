@@ -70,6 +70,10 @@ h2 {
     @apply text-2xl font-bold mb-4;
 }
 
+h3 {
+    @apply text-lg font-bold mb-4;
+}
+
 .diagnostic_card {
     @apply rounded-sm p-4 mt-4 shadow-sm border-l-3;
 }

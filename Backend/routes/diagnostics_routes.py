@@ -58,7 +58,7 @@ async def run_diagnostics(
         return [{
             "run_time": w.run_time,
             "severity": w.severity,
-            "warning_type": w.warning_type,
+            "type": w.warning_type,
             "message": w.message,
         } for w in file_warnings]
 

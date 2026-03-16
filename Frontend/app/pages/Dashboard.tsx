@@ -4,11 +4,63 @@ import "../styles/dashboard.css";
 import type { FileStats } from "~/types";
 import { Button } from "~/components/button";
 import Diagnostics, { run_diagnostics } from "./diagnostics";
+import { Bar } from "react-chartjs-2";
+
+function Bars({
+  fileStats,
+  setSelectedFileId,
+  setSelectedFilename,
+}: {
+  fileStats: FileStats[];
+  setSelectedFileId: (id: number) => void;
+  setSelectedFilename: (filename: string) => void;
+}) {
+  let labels = fileStats.map((stat) => stat.filename);
+  let diagnosticsRan = fileStats.filter((stat) => stat.diagnostics_ran);
+
+  // show bar graph with chart.js
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false,
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: "Number of Warnings",
+      },
+    },
+    onClick: (_event: any, elements: any) => {
+      if (elements.length == 0) return;
+      setSelectedFileId(fileStats[elements[0].index].id);
+      setSelectedFilename(fileStats[elements[0].index].filename);
+    },
+  };
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: "Diagnostics Ran",
+        data: diagnosticsRan.map((stat) => stat.warning_count),
+      },
+    ],
+  };
+
+  return (
+    <div className="bar_chart_container">
+      <h2>Number of Warnings by File</h2>
+      <Bar options={options} data={data} />
+    </div>
+  );
+}
 
 function Dashboard() {
   const [fileStats, setFileStats] = useState<FileStats[]>([]);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
+  const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 
   function loadFileStats() {
     // load file stats
@@ -48,38 +100,19 @@ function Dashboard() {
           Dashboard{" "}
           <span style={{ color: "var(--primary-color)" }}>Overview</span>
         </h1>
-        <p style={{ color: "var(--secondary-text)", fontSize: "1.1rem" }}>
-          Real-time vehicle health status and predictive maintenance alerts.
-        </p>
       </header>
 
-      <div className="alerts_section">
-        <h2
-          style={{
-            marginBottom: "25px",
-            fontSize: "1.5rem",
-            fontWeight: "700",
-            color: "var(--text-primary)",
-          }}
-        >
-          Recent Maintenance Alerts
-        </h2>
+      <Bars
+        fileStats={fileStatsDiagnosticsRanSorted}
+        setSelectedFileId={setSelectedFileId}
+        setSelectedFilename={setSelectedFilename}
+      />
 
-        <div className="flex gap-4 flex-row">
+      {fileStatsDiagnosticsNotRan.length > 0 && (
+        <div className="alerts_section">
           <div className="flex gap-2 flex-col flex-1">
-            {fileStats &&
-              fileStatsDiagnosticsRanSorted.map((stat) => (
-                <div className="diagnostic_card border-primary">
-                  <h2>{stat.filename}</h2>
-                  <p>
-                    {stat.warning_count}{" "}
-                    {stat.warning_count == 1 ? "warning" : "warnings"}
-                  </p>
-                </div>
-              ))}
-          </div>
+            <h2>Files Where Diagnostics Have Not Been Run</h2>
 
-          <div className="flex gap-2 flex-col flex-1">
             {fileStats &&
               fileStatsDiagnosticsNotRan.map((stat) => (
                 <div className="diagnostic_card border-red-500 flex flex-row justify-between">
@@ -103,18 +136,21 @@ function Dashboard() {
               ))}
           </div>
         </div>
-      </div>
+      )}
 
       {/* DARKEN AREA IF SIDEBAR IS SHOWING */}
-      {sidebarVisible && (
+      {selectedFileId && selectedFilename && (
         <div
-          onClick={() => setSidebarVisible(false)}
+          onClick={() => {
+            setSelectedFileId(null);
+            setSelectedFilename(null);
+          }}
           className="z-10 fixed top-0 left-0 w-full h-full bg-black/50"
         />
       )}
 
       {/* SIDEBAR FOR DIAGNOSTIC INSIGHTS */}
-      {sidebarVisible && (
+      {selectedFileId && selectedFilename && (
         <Diagnostics
           filename={
             fileStats.filter((stat) => stat.id === selectedFileId)[0]
