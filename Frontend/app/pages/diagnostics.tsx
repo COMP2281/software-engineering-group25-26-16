@@ -5,7 +5,23 @@ import { useEffect, useRef, useState } from "react";
 import { Chart } from "chart.js/auto";
 import { Bar, Scatter } from "react-chartjs-2";
 
+type Sender = "Granite" | "You";
+
+interface GraniteMessage {
+  sender: Sender;
+  message: string;
+}
+
+interface GraniteResponse {
+  explanation: string;
+}
+
 function DiagnosticInfo({ warning }: { warning: Warning }) {
+  const [graniteInput, setGraniteInput] = useState("");
+  const [graniteMessages, setGraniteMessages] = useState<GraniteMessage[]>([]);
+
+  useEffect(() => setGraniteMessages([]), [warning]);
+
   let severityColour = "border-green-400";
   if (warning.severity === "low") {
     severityColour = "border-green-400";
@@ -14,6 +30,47 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
   } else if (warning.severity === "high") {
     severityColour = "border-red-500";
   }
+
+  async function ask_granite() {
+    setGraniteInput("");
+
+    setGraniteMessages([
+      ...graniteMessages,
+      {
+        sender: "You",
+        message: graniteInput,
+      },
+      {
+        sender: "Granite",
+        message: "Waiting for Granite's response...",
+      },
+    ]);
+
+    const response = await fetch(
+      `/api/explain/${warning.id}?` +
+        new URLSearchParams({
+          query: graniteInput,
+        }),
+      {
+        method: "GET",
+      },
+    );
+
+    let response_json: GraniteResponse = await response.json();
+
+    setGraniteMessages([
+      ...graniteMessages,
+      {
+        sender: "You",
+        message: graniteInput,
+      },
+      {
+        sender: "Granite",
+        message: response_json.explanation,
+      },
+    ]);
+  }
+
   return (
     <div className={`diagnostic_card ${severityColour}`}>
       <h3>Diagnostic Details</h3>
@@ -28,7 +85,34 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
       </p>
       <p>{warning.message}</p>
 
-      <Button onClick={() => {}}>Ask Granite</Button>
+      <div className="flex flex-row m-2">
+        <input
+          type="text"
+          value={graniteInput}
+          onChange={(e) => setGraniteInput(e.target.value)}
+          placeholder="Ask Granite about this..."
+          className="flex-1"
+          onKeyDown={(e) => e.key === "Enter" && ask_granite()}
+          onSubmit={(e) => {
+            e.preventDefault();
+            ask_granite();
+          }}
+        />
+        <Button onClick={ask_granite}>Ask Granite</Button>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {graniteMessages.map((msg) => (
+          <div
+            className={`rounded-lg w-8/12 p-4 shadow-lg ${
+              msg.sender === "You" ? "self-end" : "self-start"
+            }`}
+          >
+            <strong>{msg.sender}</strong>
+            <p>{msg.message}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

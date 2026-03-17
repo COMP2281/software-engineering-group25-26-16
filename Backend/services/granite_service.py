@@ -4,7 +4,9 @@ Uses Ollama to run Granite locally for generating user-friendly diagnostics.
 """
 
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 from config import GRANITE_MODEL
+from models.upload import FileWarning
 from services.validators import validate_filename
 
 
@@ -48,6 +50,46 @@ def _build_prompt(warnings: list[dict], filename: str, alert_index: int | None =
         )
 
     return prompt
+
+def generate_explanation_for_warning(warning_id: int, query: str, db: Session) -> dict:
+    # Get warning
+    warning = db.query(FileWarning).filter(FileWarning.id == warning_id).first()
+
+    if warning is None:
+        raise HTTPException(status_code=404, detail="Warning not found")
+
+    # Build prompt
+    prompt = (
+        f"You are a friendly car maintenance advisor. A vehicle diagnostic scan found the "
+        f"following issue:\n\n"
+        f"- Type: {warning.warning_type}\n"
+        f"- Severity: {warning.severity}\n"
+        f"- Details: {warning.message}\n"
+        f"- Engine run time at detection: {warning.run_time}\n\n"
+        f"Explain this issue in plain language for someone who knows nothing about cars. "
+        f"Include: what the problem is, how serious it is, what the driver should do about it, "
+        f"and whether it is safe to keep driving. Keep the response concise (3-5 sentences). "
+        f"Do NOT use technical jargon."
+        ) + f"\n\nUser query: {query}"
+
+    # Try Granite via Ollama
+    try:
+        from ollama import generate as ollama_generate
+        response = ollama_generate(GRANITE_MODEL, prompt)
+        explanation = response.get("response", "").strip()
+
+        if explanation:
+            return {
+                "explanation": explanation,
+            }
+    except ImportError:
+        pass
+    except Exception:
+        pass
+
+    return {
+        "explanation": "Error generating explanation with Granite. Please try again later."
+    }
 
 
 def generate_explanation(filename: str, alert_index: int | None = None) -> dict:

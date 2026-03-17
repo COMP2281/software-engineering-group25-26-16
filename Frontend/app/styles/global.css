@@ -83,6 +83,10 @@ h3 {
     height: 100vh;
 }
 
+input[type="text"]:not(.search_input) {
+    @apply rounded-lg p-4 m-1 shadow-lg;
+}
+
 @media (max-width: 768px) {
     :root {
         --sidebar-width: 200px;

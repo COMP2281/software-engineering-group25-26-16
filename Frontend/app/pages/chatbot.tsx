@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Plus, Trash2, Menu } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { Send, User, Bot, Plus, Trash2, Menu } from "lucide-react";
 
-import '../styles/pages.css';
-import '../styles/chatbot.css';
+import "../styles/pages.css";
+import "../styles/chatbot.css";
 
 interface Message {
   id: number;
-  role: 'user' | 'bot';
+  role: "user" | "bot";
   content: string;
   created_at?: string;
 }
@@ -19,7 +19,7 @@ interface ChatSession {
 
 export default function Chatbot() {
   const [hasStarted, setHasStarted] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
@@ -33,7 +33,7 @@ export default function Chatbot() {
 
   // Always scroll to the newest message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const addBotMessage = (text: string) => {
@@ -41,7 +41,7 @@ export default function Chatbot() {
       ...prev,
       {
         id: Date.now(),
-        role: 'bot',
+        role: "bot",
         content: text,
       },
     ]);
@@ -50,15 +50,13 @@ export default function Chatbot() {
 
   const loadSessions = async (autoOpenLatest = false) => {
     try {
-      const response = await fetch('/api/chat/sessions', {
-        method: 'GET',
-        credentials: 'include',
+      const response = await fetch("/api/chat/sessions", {
+        method: "GET",
+        credentials: "include",
       });
 
       if (!response.ok) {
-        console.error('Failed to load chat sessions:', response.status);
-
-
+        console.error("Failed to load chat sessions:", response.status);
 
         if (response.status === 401) {
           setSessions([]);
@@ -77,28 +75,27 @@ export default function Chatbot() {
         setHasStarted(true);
         loadMessages(latestSessionId);
       }
-
     } catch (error) {
-      console.error('Error loading sessions:', error);
+      console.error("Error loading sessions:", error);
     }
   };
 
   const loadMessages = async (sessionId: number) => {
     try {
       const response = await fetch(`/api/chat/sessions/${sessionId}/messages`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
       });
 
       if (!response.ok) {
-        console.error('Failed to load messages:', response.status);
+        console.error("Failed to load messages:", response.status);
 
         if (response.status === 401) {
-          addBotMessage('You are not logged in. Please sign in again.');
+          addBotMessage("You are not logged in. Please sign in again.");
           return;
         }
 
-        addBotMessage('Could not load previous chat messages.');
+        addBotMessage("Could not load previous chat messages.");
         return;
       }
 
@@ -107,29 +104,31 @@ export default function Chatbot() {
       setActiveSessionId(sessionId);
       setHasStarted(true);
     } catch (error) {
-      console.error('Error loading messages:', error);
-      addBotMessage('Error loading previous chat messages.');
+      console.error("Error loading messages:", error);
+      addBotMessage("Error loading previous chat messages.");
     }
   };
 
   const createNewChat = async () => {
     try {
-      const response = await fetch('/api/chat/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ title: 'New Chat' }),
+      const response = await fetch("/api/chat/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title: "New Chat" }),
       });
 
       if (!response.ok) {
-        console.error('Failed to create new chat:', response.status);
+        console.error("Failed to create new chat:", response.status);
 
         if (response.status === 401) {
-          addBotMessage('You are not logged in. Please sign in again.');
+          addBotMessage("You are not logged in. Please sign in again.");
           return null;
         }
 
-        addBotMessage(`Could not create a new chat. Server returned ${response.status}.`);
+        addBotMessage(
+          `Could not create a new chat. Server returned ${response.status}.`,
+        );
         return null;
       }
 
@@ -138,11 +137,11 @@ export default function Chatbot() {
       setActiveSessionId(newSession.id);
       setMessages([]);
       setHasStarted(false);
-      setInputValue('');
+      setInputValue("");
       return newSession.id;
     } catch (error) {
-      console.error('Error creating chat:', error);
-      addBotMessage('Error creating a new chat session.');
+      console.error("Error creating chat:", error);
+      addBotMessage("Error creating a new chat session.");
       return null;
     }
   };
@@ -150,19 +149,21 @@ export default function Chatbot() {
   const deleteChat = async (sessionId: number) => {
     try {
       const response = await fetch(`/api/chat/sessions/${sessionId}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
-        console.error('Failed to delete chat:', response.status);
+        console.error("Failed to delete chat:", response.status);
 
         if (response.status === 401) {
-          addBotMessage('You are not logged in. Please sign in again.');
+          addBotMessage("You are not logged in. Please sign in again.");
           return;
         }
 
-        addBotMessage(`Could not delete chat. Server returned ${response.status}.`);
+        addBotMessage(
+          `Could not delete chat. Server returned ${response.status}.`,
+        );
         return;
       }
 
@@ -182,8 +183,8 @@ export default function Chatbot() {
         }
       }
     } catch (error) {
-      console.error('Error deleting chat:', error);
-      addBotMessage('Error deleting chat.');
+      console.error("Error deleting chat:", error);
+      addBotMessage("Error deleting chat.");
     }
   };
 
@@ -211,7 +212,7 @@ export default function Chatbot() {
 
     const newUserMsg: Message = {
       id: userMsgId,
-      role: 'user',
+      role: "user",
       content: userText,
     };
 
@@ -221,18 +222,18 @@ export default function Chatbot() {
       newUserMsg,
       {
         id: typingId,
-        role: 'bot',
-        content: '✨ Analyzing engine data with IBM Granite...',
+        role: "bot",
+        content: "✨ Analyzing engine data with IBM Granite...",
       },
     ]);
 
-    setInputValue('');
+    setInputValue("");
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           session_id: sessionId,
           message: userText,
@@ -241,20 +242,22 @@ export default function Chatbot() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Chat request failed:', response.status, errorText);
+        console.error("Chat request failed:", response.status, errorText);
 
         let message = `Chat request failed. Server returned ${response.status}.`;
 
         if (response.status === 401) {
-          message = 'You are not logged in. Please sign in again.';
+          message = "You are not logged in. Please sign in again.";
         }
 
         setMessages((prev) =>
-          prev.filter((m) => m.id !== typingId).concat({
-            id: Date.now(),
-            role: 'bot',
-            content: message,
-          })
+          prev
+            .filter((m) => m.id !== typingId)
+            .concat({
+              id: Date.now(),
+              role: "bot",
+              content: message,
+            }),
         );
 
         return;
@@ -264,32 +267,36 @@ export default function Chatbot() {
 
       // Replace the temporary loading message with the real reply
       setMessages((prev) =>
-        prev.filter((m) => m.id !== typingId).concat({
-          id: Date.now(),
-          role: 'bot',
-          content: data.reply || 'Analysis error.',
-        })
+        prev
+          .filter((m) => m.id !== typingId)
+          .concat({
+            id: Date.now(),
+            role: "bot",
+            content: data.reply || "Analysis error.",
+          }),
       );
 
       // Refresh the sidebar in case the title changed
       loadSessions();
     } catch (error) {
-      console.error('Chat request error:', error);
+      console.error("Chat request error:", error);
 
       setMessages((prev) =>
-        prev.filter((m) => m.id !== typingId).concat({
-          id: Date.now(),
-          role: 'bot',
-          content: 'Server unreachable. Please check your diagnostic connection.',
-        })
+        prev
+          .filter((m) => m.id !== typingId)
+          .concat({
+            id: Date.now(),
+            role: "bot",
+            content:
+              "Server unreachable. Please check your diagnostic connection.",
+          }),
       );
     }
   };
 
   return (
     <div className="chatbot_page_container">
-      <div className={`chatbot_header ${hasStarted ? 'started' : 'centered'}`}>
-
+      <div className={`chatbot_header ${hasStarted ? "started" : "centered"}`}>
         {hasStarted && (
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -301,7 +308,8 @@ export default function Chatbot() {
         )}
 
         <h1 className="chatbot_main_title">
-          Granite <span style={{ color: 'var(--primary-color)' }}>Guardian</span>
+          Granite{" "}
+          <span style={{ color: "var(--primary-color)" }}>Guardian</span>
         </h1>
 
         {!hasStarted && (
@@ -311,7 +319,7 @@ export default function Chatbot() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
                 placeholder="Ask Granite Guardian anything..."
                 className="search_input"
               />
@@ -330,7 +338,7 @@ export default function Chatbot() {
 
       {hasStarted && (
         <div className="chatbot_content_row">
-          <aside className={`chat_sidebar ${!isSidebarOpen ? 'closed' : ''}`}>
+          <aside className={`chat_sidebar ${!isSidebarOpen ? "closed" : ""}`}>
             <button
               onClick={createNewChat}
               className="new_chat_button"
@@ -346,7 +354,7 @@ export default function Chatbot() {
                 <div key={session.id} className="chat_session_row">
                   <button
                     onClick={() => loadMessages(session.id)}
-                    className={`chat_session_button ${session.id === activeSessionId ? 'active' : ''}`}
+                    className={`chat_session_button ${session.id === activeSessionId ? "active" : ""}`}
                     aria-label={`Open chat ${session.title}`}
                     title={session.title}
                   >
@@ -371,7 +379,7 @@ export default function Chatbot() {
               {messages.map((msg) => (
                 <div key={msg.id} className={`message_row ${msg.role}`}>
                   <div className={`message_avatar ${msg.role}`}>
-                    {msg.role === 'user' ? (
+                    {msg.role === "user" ? (
                       <User size={20} color="white" />
                     ) : (
                       <Bot size={20} color="var(--primary-color)" />
@@ -389,13 +397,15 @@ export default function Chatbot() {
       )}
 
       {hasStarted && (
-        <div className={`chatbot_bottom_search fade_in_up ${!isSidebarOpen ? 'expanded' : ''}`}>
+        <div
+          className={`chatbot_bottom_search fade_in_up ${!isSidebarOpen ? "expanded" : ""}`}
+        >
           <div className="search_input_wrapper bottom_wrapper">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="Message Granite Guardian..."
               className="search_input bottom_input"
             />
@@ -413,3 +423,4 @@ export default function Chatbot() {
     </div>
   );
 }
+

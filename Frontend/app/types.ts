@@ -1,4 +1,5 @@
 export interface Warning {
+  id: number;
   run_time: number;
   severity: string;
   type: string;

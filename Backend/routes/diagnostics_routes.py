@@ -56,6 +56,7 @@ async def run_diagnostics(
         file_warnings = db.query(FileWarning).filter(FileWarning.file_id == file_id).all()
 
         return [{
+            "id": w.id,
             "run_time": w.run_time,
             "severity": w.severity,
             "type": w.warning_type,
@@ -86,10 +87,14 @@ async def run_diagnostics(
 
     db.commit()
 
-    # convert warnings to json
-    return [w.to_dict() for w in warnings]
-
-    #return diagnostics_service.run_diagnostics(filename, force_rescan=force_rescan)
+    file_warnings = db.query(FileWarning).filter(FileWarning.file_id == file_id).all()
+    return [{
+        "id": w.id,
+        "run_time": w.run_time,
+        "severity": w.severity,
+        "type": w.warning_type,
+        "message": w.message,
+    } for w in file_warnings]
 
 
 @router.post("/sensors/disable")

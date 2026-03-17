@@ -33,7 +33,7 @@ ANOMALY_THRESHOLDS = {
 }
 
 # Granite / Ollama model settings
-GRANITE_MODEL = "granite3-dense:2b"
+GRANITE_MODEL = "granite4:350m"
 
 # Pagination defaults
 DEFAULT_PAGE_SIZE = 50
