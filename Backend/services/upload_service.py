@@ -133,12 +133,17 @@ async def save_upload(user_id: int, file: UploadFile, db: Session) -> dict:
     }
 
 
-def delete_file(filename: str, user_id: int) -> str:
+def delete_file(file_id: int, user_id: int, db: Session) -> str:
     """
     Delete an uploaded CSV and its associated log.
     After deletion, /alerts/{filename} and /diagnostics/{filename} will return 404.
     """
-    filename = validate_filename(filename)
+    # get filename from database
+    stmt = select(UploadedFile).where(UploadedFile.id == file_id, UploadedFile.user_id == user_id)
+    result = db.execute(stmt).scalar_one_or_none()
+    if not result:
+        raise HTTPException(status_code=404, detail=f"File with ID '{file_id}' not found.")
+    filename = result.filename
 
     path = os.path.join(UPLOADED_FOLDER, str(user_id), filename)
     if not os.path.exists(path):
@@ -149,6 +154,11 @@ def delete_file(filename: str, user_id: int) -> str:
     log_path = os.path.join("./logs", f"{filename}.txt")
     if os.path.exists(log_path):
         os.remove(log_path)
+
+    # delete from database
+    db.delete(result)
+    db.commit()
+    
 
     return filename
 

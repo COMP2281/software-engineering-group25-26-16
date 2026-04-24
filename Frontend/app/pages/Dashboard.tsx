@@ -58,7 +58,6 @@ function Bars({
 
 function Dashboard() {
   const [fileStats, setFileStats] = useState<FileStats[]>([]);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 

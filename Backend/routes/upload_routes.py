@@ -32,7 +32,7 @@ async def list_uploads(user = Depends(get_current_user), db: Session = Depends(g
 
 
 @router.delete("/{filename}")
-async def delete_upload(filename: str, user = Depends(get_current_user)):
+async def delete_upload(filename: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Delete an uploaded CSV and its warning log. Returns 404 if not found."""
-    deleted = upload_service.delete_file(filename, user.id)
+    deleted = upload_service.delete_file(filename, user.id, db)
     return {"message": f"File '{deleted}' deleted successfully.", "filename": deleted}

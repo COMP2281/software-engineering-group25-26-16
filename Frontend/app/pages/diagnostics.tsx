@@ -4,6 +4,7 @@ import { Button } from "~/components/button";
 import { useEffect, useRef, useState } from "react";
 import { Chart } from "chart.js/auto";
 import { Bar, Scatter } from "react-chartjs-2";
+import { Trash } from "lucide-react";
 
 type Sender = "Granite" | "You";
 
@@ -186,7 +187,14 @@ function DiagnosticsChart({
   };
 
   const options = {
+    parsing: false,
+    animation: false,
     plugins: {
+      decimation: {
+        enabled: true,
+        algorithm: "lttb", // or 'min-max'
+        samples: 50, // number of visible points
+      },
       zoom: {
         zoom: {
           wheel: {
@@ -271,6 +279,7 @@ function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
   return (
     <>
       <h3>Diagnostic Timeline</h3>
+
       <p>
         <i className="text-gray-500">
           {warnings.length} {warnings.length === 1 ? "warning" : "warnings"}

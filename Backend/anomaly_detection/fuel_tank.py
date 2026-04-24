@@ -12,7 +12,10 @@ It detects:
 
 from __future__ import annotations
 
-from .base_warning import BaseWarning, Severity
+try:
+    from .base_warning import BaseWarning, Severity
+except:
+    from base_warning import BaseWarning, Severity
 
 from typing import Any, Dict, List
 

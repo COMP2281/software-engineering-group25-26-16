@@ -1,5 +1,9 @@
-from . import engine_coolant, catalytic, fuel_tank
-from .base_warning import BaseWarning
+try:
+    from . import engine_coolant, catalytic, fuel_tank
+    from .base_warning import BaseWarning
+except:
+    import engine_coolant, catalytic, fuel_tank
+    from base_warning import BaseWarning
 
 UPLOADED_FOLDER = "../uploaded_data"
 

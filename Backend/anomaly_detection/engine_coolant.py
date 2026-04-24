@@ -3,8 +3,10 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 import os
 
-from .base_warning import BaseWarning, Severity
-import pickle
+try:
+    from .base_warning import BaseWarning, Severity
+except:
+    from base_warning import BaseWarning, Severity
 
 UPLOADED_FOLDER = "../uploaded_data"
 

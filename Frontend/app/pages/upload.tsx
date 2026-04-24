@@ -4,6 +4,8 @@ import "../styles/pages.css";
 import "../styles/dashboard.css";
 import Diagnostics from "./diagnostics";
 import type { File } from "~/types";
+import { Button } from "~/components/button";
+import { Trash } from "lucide-react";
 
 export default function Upload() {
   const [files, setFiles] = useState<File[] | null>(null);
@@ -62,7 +64,7 @@ export default function Upload() {
         }}
       >
         <h1>
-          Granite <span className="text-primary">Guardian</span>
+          Upload <span className="text-primary">Files</span>
         </h1>
         <p style={{ color: "var(--secondary-text)", fontSize: "1.1rem" }}>
           Intelligent OBD-II Diagnostic Management System
@@ -91,7 +93,7 @@ export default function Upload() {
             files.map((file) => (
               <div
                 key={file.id}
-                className="summary_card cursor-pointer flex flex-col justify-between items-start p-6 border border-gray-200 transition-transform duration-200 hover:-translate-y-1"
+                className="summary_card cursor-pointer flex flex-col justify-between items-start p-6 border border-gray-200 transition-transform duration-200 hover:-translate-y-1 flex flex-row justify-between"
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.transform = "translateY(-5px)")
                 }
@@ -103,15 +105,8 @@ export default function Upload() {
                   setSidebarVisible(true);
                 }}
               >
-                <div>
-                  <div
-                    style={{
-                      width: "40px",
-                      height: "4px",
-                      background: "var(--primary-color)",
-                      marginBottom: "15px",
-                    }}
-                  ></div>
+                <div className="flex flex-col items-start">
+                  <div className="w-[40px] h-[4px] mb-4 bg-primary"></div>
                   <h4
                     style={{
                       margin: "0",

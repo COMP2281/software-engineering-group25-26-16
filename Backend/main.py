@@ -7,6 +7,7 @@ Mounts all route modules and registers middleware.
 Run with:  uvicorn main:app --reload
 Docs at:   http://localhost:8000/docs  (Swagger UI)
 """
+from config import GRANITE_MODEL
 from database import Base, engine
 from datetime import datetime
 from typing import Optional
@@ -327,7 +328,7 @@ async def chat_with_granite(
             })
 
         response = ollama.chat(
-            model="granite4:350m",
+            model=GRANITE_MODEL,
             messages=ollama_messages
         )
 
