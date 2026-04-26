@@ -6,6 +6,7 @@ All business logic is delegated to services/diagnostics_service.py.
 from fastapi import APIRouter, Query
 from sqlalchemy import update
 from anomaly_detection.base_warning import BaseWarning
+from config import MODELS_PATH
 from models.schemas import SensorToggleRequest
 from services import diagnostics_service
 from services.auth_service import get_current_user
@@ -20,7 +21,7 @@ import os
 router = APIRouter(prefix="/diagnostics", tags=["Diagnostics"])
 
 # ML model
-model = AnomalyDetectionModel("sample_data/")
+model = AnomalyDetectionModel("sample_data/", MODELS_PATH)
 
 def get_model():
     return model

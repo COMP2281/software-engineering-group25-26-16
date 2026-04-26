@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 """
 Central configuration for the Granite Guardian backend.
@@ -36,6 +37,10 @@ ANOMALY_THRESHOLDS = {
 
 # Granite / Ollama model settings
 GRANITE_MODEL = os.getenv("GRANITE_MODEL") or "granite4:350m"
+
+MODELS_PATH = os.getenv("MODELS_PATH")
+if MODELS_PATH is not None:
+    MODELS_PATH = Path(MODELS_PATH)
 
 # Pagination defaults
 DEFAULT_PAGE_SIZE = 50

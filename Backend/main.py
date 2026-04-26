@@ -8,7 +8,6 @@ Run with:  uvicorn main:app --reload
 Docs at:   http://localhost:8000/docs  (Swagger UI)
 """
 from config import GRANITE_MODEL
-from database import Base, engine
 from datetime import datetime
 from typing import Optional
 from sqlalchemy import desc

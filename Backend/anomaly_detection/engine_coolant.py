@@ -252,27 +252,6 @@ class EngineCoolantClassifier():
         return predictions, distances
 
     def init_model(self, data_path: str):
-        # try to load the model first
-        #model_file = "engine_coolant_model.pkl"
-        #model_params_file = "engine_coolant_model_params.txt"
-
-        # try:
-        #     with open(model_file, "rb") as f:
-        #         print("Loading KNN model from file...")
-        #         saved = pickle.load(f)
-        #
-        #     # load params
-        #     # with open(model_params_file, "r") as f:
-        #     #     print("Loading model parameters from file...")
-        #     #     lines = f.readlines()
-        #     #     self._train_mean = np.fromstring(lines[0].strip(), sep=" ")
-        #     #     self._train_std = np.fromstring(lines[1].strip(), sep=" ")
-        #
-        #     return saved["model"], saved["threshold"]
-        #
-        # except FileNotFoundError:
-        print("Model file not found, training new model...")
-
         num_files_idle = 47
         num_files_drive = 13
 
@@ -293,17 +272,6 @@ class EngineCoolantClassifier():
             )
 
         knn, threshold = self.train_oneclass_knn(np.array(normal_windows))
-
-        # save model to file
-        # with open(model_file, "wb") as f:
-        #     pickle.dump({
-        #         "model": knn,
-        #         "threshold": threshold
-        #     }, f)
-        #
-        # with open(model_params_file, "w") as f:
-        #     f.write(f"{self._train_mean}\n")
-        #     f.write(f"{self._train_std}")
 
         return knn, threshold
 

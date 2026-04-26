@@ -1,3 +1,8 @@
+import os
+import pickle
+from pathlib import Path
+
+
 try:
     from . import engine_coolant, catalytic, fuel_tank
     from .base_warning import BaseWarning
@@ -13,8 +18,33 @@ This is a conglomeration of all the anomaly detection models.
 class AnomalyDetectionModel:
     # this will train the models to detect anomalies
     # currently supports engine coolant, catalytic, and fuel tank warnings
-    def __init__(self, data_path: str):
-        self.engine_coolant = engine_coolant.EngineCoolantClassifier(data_path)
+    def __init__(self, data_path: str, models_path: Path | None = None):
+        
+        # try to load engine coolant classifier from file
+        if models_path is not None:
+            # try to load from file
+            try:
+                with open(models_path / "ect_model.pkl", "rb") as f:
+                    pickle.load(f)
+                print("Loaded ECT anomaly detector model from file")
+            except:
+                print("Could not ECT anomaly detector model from file")
+                # if file could not be loaded
+
+                # train engine coolant classifier from sample data
+                self.engine_coolant = engine_coolant.EngineCoolantClassifier(data_path)
+
+                # save to file
+                try:
+                    with open(models_path / "ect_model.pkl", "wb") as f:
+                        pickle.dump(self.engine_coolant, f)
+                        print("Saved ECT anomaly detector model to file")
+                except:
+                    print("Failed to save ECT anomaly detector model to file")
+        else:
+            # train engine coolant classifier from sample data
+            self.engine_coolant = engine_coolant.EngineCoolantClassifier(data_path)
+
         self.catalytic = catalytic.CatalyticClassifier()
         self.fuel_tank = fuel_tank.FuelTankClassifier()
 
