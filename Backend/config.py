@@ -1,3 +1,5 @@
+import os
+
 """
 Central configuration for the Granite Guardian backend.
 """
@@ -33,7 +35,7 @@ ANOMALY_THRESHOLDS = {
 }
 
 # Granite / Ollama model settings
-GRANITE_MODEL = "granite4:3b"
+GRANITE_MODEL = os.getenv("GRANITE_MODEL") or "granite4:350m"
 
 # Pagination defaults
 DEFAULT_PAGE_SIZE = 50

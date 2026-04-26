@@ -31,8 +31,27 @@ from middleware.error_handler import register_error_handlers
 from middleware.security import SecurityHeadersMiddleware
 from middleware.rate_limiter import register_rate_limiter
 from middleware.request_logger import RequestLoggerMiddleware
+import time
 
-from anomaly_detection.anomaly_detection import AnomalyDetectionModel
+# grab granite model
+ollama_running = False
+
+while not ollama_running:
+    try:
+        ollama.list()
+        ollama_running = True
+    except:
+        print("Ollama not running, trying again in 2 seconds...")
+        time.sleep(2)
+
+print(f"Pulling Granite model ({GRANITE_MODEL}), this may take a while...")
+
+try:
+    ollama.pull(GRANITE_MODEL)
+    print(f"Finished pulling Granite model ({GRANITE_MODEL}).")
+except:
+    print("Failed to pull Granite model (perhaps model does not exist?).")
+    print("AI chatbot features will not work!")
 
 #Logging 
 logging.basicConfig(
