@@ -9,12 +9,9 @@ import { Trash } from "lucide-react";
 type Sender = "Granite" | "You";
 
 interface GraniteMessage {
+  id: number;
   sender: Sender;
   message: string;
-}
-
-interface GraniteResponse {
-  explanation: string;
 }
 
 function DiagnosticInfo({ warning }: { warning: Warning }) {
@@ -32,16 +29,24 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
     severityColour = "border-red-500";
   }
 
-  async function ask_granite() {
+  const ask_granite = async () => {
     setGraniteInput("");
 
-    setGraniteMessages([
+    setGraniteMessages((graniteMessages) => [
       ...graniteMessages,
       {
+        id:
+          graniteMessages.length > 0
+            ? graniteMessages[graniteMessages.length - 1].id + 1
+            : 1,
         sender: "You",
         message: graniteInput,
       },
       {
+        id:
+          graniteMessages.length > 0
+            ? graniteMessages[graniteMessages.length - 1].id + 2
+            : 2,
         sender: "Granite",
         message: "Waiting for Granite's response...",
       },
@@ -57,20 +62,51 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
       },
     );
 
-    let response_json: GraniteResponse = await response.json();
+    const stream_reader = response.body?.getReader();
 
-    setGraniteMessages([
-      ...graniteMessages,
-      {
-        sender: "You",
-        message: graniteInput,
-      },
-      {
-        sender: "Granite",
-        message: response_json.explanation,
-      },
-    ]);
-  }
+    if (!stream_reader) {
+      setGraniteMessages((prev) => {
+        let new_arr = [...prev];
+        new_arr[prev.length - 1].message = "Granite failed to respond.";
+        return new_arr;
+      });
+      return;
+    }
+
+    const decoder = new TextDecoder("utf-8");
+    let result = "";
+
+    while (true) {
+      const { value, done } = await stream_reader.read();
+      if (done) break;
+
+      if (value) {
+        const chunk = decoder.decode(value, { stream: true });
+        result += chunk;
+      }
+
+      console.log("Current result:", result);
+      setGraniteMessages((prev) => {
+        let new_arr = [...prev];
+        new_arr[prev.length - 1].message = result;
+        return new_arr;
+      });
+    }
+
+    // let response_json: GraniteResponse = await response.json();
+    //
+    // setGraniteMessages([
+    //   ...graniteMessages,
+    //   {
+    //     sender: "You",
+    //     message: graniteInput,
+    //   },
+    //   {
+    //     sender: "Granite",
+    //     message: response_json.explanation,
+    //   },
+    // ]);
+  };
 
   return (
     <div className={`diagnostic_card ${severityColour}`}>
@@ -105,6 +141,7 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
       <div className="flex flex-col gap-4">
         {graniteMessages.map((msg) => (
           <div
+            key={msg.id}
             className={`rounded-lg w-8/12 p-4 shadow-lg ${
               msg.sender === "You" ? "self-end" : "self-start"
             }`}

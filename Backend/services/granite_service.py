@@ -3,12 +3,14 @@ Service layer for IBM Granite natural-language explanation generation.
 Uses Ollama to run Granite locally for generating user-friendly diagnostics.
 """
 
+from collections.abc import Iterable
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from config import GRANITE_MODEL
 from models.upload import FileWarning
+from routes.diagnostics_routes import run_diagnostics
 from services.validators import validate_filename
-
+import ollama
 
 def _build_prompt(warnings: list[dict], filename: str, alert_index: int | None = None) -> str:
     """Build a prompt for Granite based on diagnostic warnings."""
@@ -51,7 +53,7 @@ def _build_prompt(warnings: list[dict], filename: str, alert_index: int | None =
 
     return prompt
 
-def generate_explanation_for_warning(warning_id: int, query: str, db: Session) -> dict:
+def generate_explanation_for_warning(warning_id: int, query: str, db: Session) -> Iterable[str]:
     # Get warning
     warning = db.query(FileWarning).filter(FileWarning.id == warning_id).first()
 
@@ -74,22 +76,15 @@ def generate_explanation_for_warning(warning_id: int, query: str, db: Session) -
 
     # Try Granite via Ollama
     try:
-        from ollama import generate as ollama_generate
-        response = ollama_generate(GRANITE_MODEL, prompt)
-        explanation = response.get("response", "").strip()
-
-        if explanation:
-            return {
-                "explanation": explanation,
-            }
+        response = ollama.generate(GRANITE_MODEL, prompt, stream=True)
+        for chunk in response:
+            yield chunk.response
     except ImportError:
+        print("Granite model unavailable (Ollama not installed). Ignoring.")
         pass
-    except Exception:
+    except Exception as e:
+        print(f"Error generating Granite explanation: {e}")
         pass
-
-    return {
-        "explanation": "Error generating explanation with Granite. Please try again later."
-    }
 
 
 def generate_explanation(filename: str, alert_index: int | None = None) -> dict:
