@@ -7,6 +7,8 @@ Mounts all route modules and registers middleware.
 Run with:  uvicorn main:app --reload
 Docs at:   http://localhost:8000/docs  (Swagger UI)
 """
+from collections.abc import AsyncIterable, Iterable
+from fastapi.responses import StreamingResponse
 from config import GRANITE_MODEL
 from datetime import datetime
 from typing import Optional
@@ -285,12 +287,19 @@ async def delete_chat_session(
 
     return {"message": "Chat deleted successfully"}
 
-@app.post("/chat", tags=["AI Chatbot"])
-async def chat_with_granite(
+@app.post("/chat", tags=["AI Chatbot"], response_class=StreamingResponse, response_model=None)
+def chat_with_granite(
     payload: ChatRequest,
     db: Session = Depends(get_db),
     current_user = Depends(auth_service.get_current_user)
 ):
+    return StreamingResponse(chat_with_granite_impl(payload, db, current_user), media_type="text/plain")
+
+def chat_with_granite_impl(
+    payload: ChatRequest,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth_service.get_current_user)
+) -> Iterable[str]:
     user_message = payload.message.strip()
 
     # Reject blank messages
@@ -345,12 +354,18 @@ async def chat_with_granite(
                 "content": msg.content
             })
 
+        # send message to ollama
         response = ollama.chat(
             model=GRANITE_MODEL,
-            messages=ollama_messages
+            messages=ollama_messages,
+            stream=True
         )
 
-        assistant_reply = response["message"]["content"]
+        assistant_reply  = ""
+        for word in response:
+            assistant_reply += word["message"]["content"]
+            print(f"{word["message"]["content"]}")
+            yield word["message"]["content"]
 
         # Save the assistant reply too
         assistant_msg = ChatMessage(
@@ -368,14 +383,14 @@ async def chat_with_granite(
 
         db.commit()
 
-        return {
-            "reply": assistant_reply,
-            "session_id": session.id
-        }
+        #return {
+        #    "reply": assistant_reply,
+        #    "session_id": session.id
+        #}
 
     except Exception as e:
         print(f"OLLAMA CRASH REASON: {str(e)}")
-        return {"reply": f"Granite Connection Error: {str(e)}"}
+        #return {"reply": f"Granite Connection Error: {str(e)}"}
 
 
 # Mount their routers

@@ -240,7 +240,7 @@ export default function Chatbot() {
         }),
       });
 
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         const errorText = await response.text();
         console.error("Chat request failed:", response.status, errorText);
 
@@ -263,18 +263,36 @@ export default function Chatbot() {
         return;
       }
 
-      const data = await response.json();
-
-      // Replace the temporary loading message with the real reply
+      // append new message to the end
       setMessages((prev) =>
         prev
           .filter((m) => m.id !== typingId)
           .concat({
             id: Date.now(),
             role: "bot",
-            content: data.reply || "Analysis error.",
+            content: "",
           }),
       );
+
+      const stream_reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let result = "";
+
+      while (true) {
+        const { value, done } = await stream_reader.read();
+        if (done) break;
+
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true });
+          result += chunk;
+        }
+
+        setMessages((prev) => {
+          let new_arr = [...prev];
+          new_arr[prev.length - 1].content = result;
+          return new_arr;
+        });
+      }
 
       // Refresh the sidebar in case the title changed
       loadSessions();
@@ -423,4 +441,3 @@ export default function Chatbot() {
     </div>
   );
 }
-
