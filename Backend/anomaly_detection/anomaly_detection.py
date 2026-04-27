@@ -2,6 +2,8 @@ import os
 import pickle
 from pathlib import Path
 
+from anomaly_detection.engine_coolant import EngineCoolantClassifier
+
 
 try:
     from . import engine_coolant, catalytic, fuel_tank
@@ -25,7 +27,7 @@ class AnomalyDetectionModel:
             # try to load from file
             try:
                 with open(models_path / "ect_model.pkl", "rb") as f:
-                    pickle.load(f)
+                    self.engine_coolant: EngineCoolantClassifier = pickle.load(f)
                 print("Loaded ECT anomaly detector model from file")
             except:
                 print("Could not ECT anomaly detector model from file")
@@ -49,10 +51,25 @@ class AnomalyDetectionModel:
         self.fuel_tank = fuel_tank.FuelTankClassifier()
 
     def generate_warnings(self, filepath) -> list[BaseWarning]:
+        fuel_tank_warnings = self.fuel_tank.generate_warnings(filepath)
+        engine_coolant_warnings_initial = self.engine_coolant.generate_warnings(filepath)
+        catalytic_warnings = self.catalytic.generate_warnings(filepath)
+
+        # run times that models other than the engine coolant one generated warnings at
+        other_run_times = set([w.run_time() for w in fuel_tank_warnings + catalytic_warnings])
+
+        # remove engine coolant warnings that occur at the same time as other warnings
+        engine_coolant_warnings = [w for w in engine_coolant_warnings_initial if w.run_time() not in other_run_times]
+
         warnings = []
-        warnings.extend(self.fuel_tank.generate_warnings(filepath))
-        warnings.extend(self.engine_coolant.generate_warnings(filepath))
-        warnings.extend(self.catalytic.generate_warnings(filepath))
+        warnings.extend(fuel_tank_warnings)
+        warnings.extend(engine_coolant_warnings)
+        warnings.extend(catalytic_warnings)
+
+        # priority system: remove engine coolant warnings if there are any
+        # other warnings present at the same time
+
+
         return warnings
 
 # for testing purposes only
