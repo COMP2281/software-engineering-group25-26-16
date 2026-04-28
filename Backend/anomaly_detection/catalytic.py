@@ -18,6 +18,7 @@ TOO_HOT_THRESHOLD = 871
 
 
 class CatalyticClassifier():
+
     def generate_too_hot_warnings(self, df) -> list[BaseWarning]:
         warnings = []
 

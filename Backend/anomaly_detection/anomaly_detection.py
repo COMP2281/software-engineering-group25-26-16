@@ -6,10 +6,10 @@ from anomaly_detection.engine_coolant import EngineCoolantClassifier
 
 
 try:
-    from . import engine_coolant, catalytic, fuel_tank
+    from . import engine_coolant, catalytic, fuel_tank, intake_air_temperature
     from .base_warning import BaseWarning
 except:
-    import engine_coolant, catalytic, fuel_tank
+    import engine_coolant, catalytic, fuel_tank, intake_air_temperature
     from base_warning import BaseWarning
 
 UPLOADED_FOLDER = "../uploaded_data"
@@ -49,14 +49,16 @@ class AnomalyDetectionModel:
 
         self.catalytic = catalytic.CatalyticClassifier()
         self.fuel_tank = fuel_tank.FuelTankClassifier()
+        self.iat = intake_air_temperature.IntakeAirTemperatureClassifier()
 
     def generate_warnings(self, filepath) -> list[BaseWarning]:
         fuel_tank_warnings = self.fuel_tank.generate_warnings(filepath)
         engine_coolant_warnings_initial = self.engine_coolant.generate_warnings(filepath)
         catalytic_warnings = self.catalytic.generate_warnings(filepath)
+        iat_warnings = self.iat.generate_warnings(filepath)
 
         # run times that models other than the engine coolant one generated warnings at
-        other_run_times = set([w.run_time() for w in fuel_tank_warnings + catalytic_warnings])
+        other_run_times = set([w.run_time() for w in fuel_tank_warnings + catalytic_warnings + iat_warnings])
 
         # remove engine coolant warnings that occur at the same time as other warnings
         engine_coolant_warnings = [w for w in engine_coolant_warnings_initial if w.run_time() not in other_run_times]
@@ -65,10 +67,7 @@ class AnomalyDetectionModel:
         warnings.extend(fuel_tank_warnings)
         warnings.extend(engine_coolant_warnings)
         warnings.extend(catalytic_warnings)
-
-        # priority system: remove engine coolant warnings if there are any
-        # other warnings present at the same time
-
+        warnings.extend(iat_warnings)
 
         return warnings
 
