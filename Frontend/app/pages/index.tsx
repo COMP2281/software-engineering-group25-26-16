@@ -136,13 +136,7 @@ function AuthForm() {
   );
 }
 
-enum Section {
-  Auth,
-  Settings,
-}
-
 export default function Index() {
-  let [section, setSection] = useState(Section.Auth);
   return (
     <div className="index_container">
       {/* LEFT SIDE: Branding & Hero */}
@@ -161,26 +155,8 @@ export default function Index() {
       </div>
 
       {/* RIGHT SIDE: Auth Form */}
-      {section === Section.Auth && (
-        <div className="w-1/2 h-full">
-          <AuthForm />
-        </div>
-      )}
-      {section === Section.Settings && (
-        <div className="w-1/2 h-full">
-          <Settings />
-        </div>
-      )}
-
-      <div className="fixed bottom-0 right-0">
-        {section == Section.Auth && (
-          <Button onClick={() => setSection(Section.Settings)}>Settings</Button>
-        )}
-        {section == Section.Settings && (
-          <Button onClick={() => setSection(Section.Auth)}>
-            Login/Register
-          </Button>
-        )}
+      <div className="w-1/2 h-full">
+        <AuthForm />
       </div>
     </div>
   );

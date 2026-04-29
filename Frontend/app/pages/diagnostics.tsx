@@ -362,125 +362,19 @@ function DiagnosticsChartNew({
   );
 }
 
-function DiagnosticsChart({
-  warnings,
-  setSelectedWarning,
-}: {
-  warnings: Warning[];
-  setSelectedWarning: (w: Warning) => void;
-}) {
-  // get unique types of warnings and assign id to each one
-  const types = Array.from(new Set(warnings.map((w) => w.type)));
-
-  // x axis will be run_time, y axis will be type of warning, color will be severity
-  const data = {
-    datasets: warnings.map((w) => ({
-      label: w.type,
-      data: [{ x: w.run_time, y: types.indexOf(w.type) }],
-      backgroundColor:
-        w.severity === "high"
-          ? "red"
-          : w.severity === "medium"
-            ? "orange"
-            : "green",
-      radius: 7,
-    })),
-  };
-
-  const options = {
-    parsing: false,
-    animation: false,
-    plugins: {
-      decimation: {
-        enabled: true,
-        algorithm: "lttb", // or 'min-max'
-        samples: 50, // number of visible points
-      },
-      zoom: {
-        zoom: {
-          wheel: {
-            enabled: true,
-          },
-          pinch: {
-            enabled: true,
-          },
-          mode: "x",
-        },
-      },
-      legend: {
-        display: false,
-      },
-    },
-    onClick: (event: any, elements: any) => {
-      if (elements.length == 0) return;
-      setSelectedWarning(warnings[elements[0].datasetIndex]);
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: "Run Time (s)",
-        },
-      },
-      y: {
-        title: {
-          display: true,
-          text: "Diagnostic Type",
-        },
-        ticks: {
-          display: false,
-        },
-        min: -3,
-        max: types.length + 3,
-      },
-    },
-  };
-
-  let chart_ref = useRef(null);
-
-  let reset_zoom = () => {
-    if (chart_ref.current) {
-      // @ts-ignore
-      chart_ref.current.options.scales.x.min = undefined;
-      // @ts-ignore
-      chart_ref.current.options.scales.x.max = undefined;
-      // @ts-ignore
-      chart_ref.current.update();
-    }
-  };
-
-  let full_scale = () => {
-    if (chart_ref.current) {
-      // make minimum x value 0 and maximum x value the maximum run_time
-      // @ts-ignore
-      chart_ref.current.options.scales.x.min = 0;
-      // @ts-ignore
-      chart_ref.current.options.scales.x.max =
-        Math.max(...warnings.map((w) => w.run_time)) + 5;
-      // @ts-ignore
-      chart_ref.current.update();
-    }
-  };
-  return (
-    <>
-      <Scatter ref={chart_ref} data={data} options={options} />
-
-      <Button onClick={reset_zoom}>Reset Zoom</Button>
-      <Button onClick={full_scale}>Show Full</Button>
-    </>
-  );
-}
-
 type GraphShown = "frequency" | "timeline";
 
 function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
   const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
   const [graphShown, setGraphShown] = useState<GraphShown>("timeline");
 
+  if (warnings.length === 0) {
+    return <p>No warnings found for this file.</p>;
+  }
+
   return (
     <>
       <h3>Diagnostic Timeline</h3>
-
       <p>
         <i className="text-gray-500">
           {warnings.length} {warnings.length === 1 ? "warning" : "warnings"}

@@ -50,7 +50,7 @@
 
 .page_container {
     padding: var(--spacing-xl);
-    /* max-width: 1200px; */
+    max-width: 1200px;
 }
 
 /* .page_container h1 { */

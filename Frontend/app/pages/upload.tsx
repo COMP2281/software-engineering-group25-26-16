@@ -66,9 +66,6 @@ export default function Upload() {
         <h1>
           Upload <span className="text-primary">Files</span>
         </h1>
-        <p style={{ color: "var(--secondary-text)", fontSize: "1.1rem" }}>
-          Intelligent OBD-II Diagnostic Management System
-        </p>
       </header>
 
       <h2>Upload Vehicle OBD-II Logs</h2>

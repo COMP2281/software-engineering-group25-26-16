@@ -6,11 +6,8 @@ import {
   Upload,
   MessageCircle,
   Menu,
-  LogOut,
-  Settings,
   LogOutIcon,
 } from "lucide-react";
-import { Button } from "./button";
 
 function Sidebar() {
   const location = useLocation();
