@@ -6,11 +6,9 @@ Uses Ollama to run Granite locally for generating user-friendly diagnostics.
 from collections.abc import Iterable
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
+from config import GRANITE_MODEL
 from database import get_db
 from models.upload import FileWarning
-from routes.diagnostics_routes import run_diagnostics
-from services.settings_services import get_model
-from services.validators import validate_filename
 import ollama
 
 def _build_prompt(warnings: list[dict], filename: str, alert_index: int | None = None) -> str:
@@ -85,7 +83,7 @@ def generate_explanation_for_warning(warning_id: int, query: str, db: Session = 
 
     # Try Granite via Ollama
     try:
-        response = ollama.generate(get_model(db), prompt, stream=True)
+        response = ollama.generate(GRANITE_MODEL, prompt, stream=True)
         for chunk in response:
             yield chunk.response
     except ImportError:

@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from datetime import datetime
 from typing import Optional
 from sqlalchemy import desc
+from config import GRANITE_MODEL
 from models.chat import ChatSession, ChatMessage
 import os
 import logging
@@ -20,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import get_db, get_db_manual_close
 import ollama
-from routes import settings_routes, upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
+from routes import upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
 from pydantic import BaseModel
 from services import user_service
 from fastapi import Response, HTTPException
@@ -34,7 +35,6 @@ from middleware.request_logger import RequestLoggerMiddleware
 import time
 
 from services.granite_service import pull_model
-from services.settings_services import get_model
 
 # grab granite model
 ollama_running = False
@@ -48,11 +48,10 @@ while not ollama_running:
         time.sleep(2)
 
 db_temp = get_db_manual_close()
-model = get_model(get_db_manual_close())
 db_temp.close()
 
-print(f"Pulling Granite model ({model}), this may take a while...")
-pull_model(model)
+print(f"Pulling Granite model ({GRANITE_MODEL}), this may take a while...")
+pull_model(GRANITE_MODEL)
 
 #Logging 
 logging.basicConfig(
@@ -356,7 +355,7 @@ def chat_with_granite_impl(
 
         # send message to ollama
         response = ollama.chat(
-            model=get_model(db),
+            model=GRANITE_MODEL,
             messages=ollama_messages,
             stream=True
         )
@@ -399,7 +398,6 @@ app.include_router(data_routes.router)
 app.include_router(diagnostics_routes.router)
 app.include_router(alert_routes.router)
 app.include_router(granite_routes.router)
-app.include_router(settings_routes.router)
 
 # Health check 
 @app.get("/", tags=["Health"])

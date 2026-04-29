@@ -42,6 +42,8 @@ if MODELS_PATH is not None:
     # create directory
     os.makedirs(MODELS_PATH, exist_ok=True)
 
+GRANITE_MODEL = os.getenv("GRANITE_MODEL") or "granite4:350m"
+
 # Pagination defaults
 DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 500
