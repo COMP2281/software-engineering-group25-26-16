@@ -104,11 +104,13 @@ function Dashboard() {
         </h1>
       </header>
 
-      <Bars
-        fileStats={fileStatsDiagnosticsRanSorted}
-        setSelectedFileId={setSelectedFileId}
-        setSelectedFilename={setSelectedFilename}
-      />
+      {fileStatsDiagnosticsRanSorted.length > 0 && (
+        <Bars
+          fileStats={fileStatsDiagnosticsRanSorted}
+          setSelectedFileId={setSelectedFileId}
+          setSelectedFilename={setSelectedFilename}
+        />
+      )}
 
       {fileStatsDiagnosticsNotRan.length > 0 && (
         <div className="alerts_section">
@@ -139,6 +141,16 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+      {fileStatsDiagnosticsRanSorted.length == 0 &&
+        fileStatsDiagnosticsNotRan.length == 0 && (
+          <div>
+            <h2>No files uploaded yet</h2>
+            <Button onClick={() => (window.location.href = "/upload")}>
+              Go to upload page
+            </Button>
+          </div>
+        )}
 
       {/* DARKEN AREA IF SIDEBAR IS SHOWING */}
       {selectedFileId && selectedFilename && (
