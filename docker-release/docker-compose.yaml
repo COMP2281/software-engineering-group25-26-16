@@ -1,13 +1,13 @@
 services:
   gg-backend:
-    build: ../Backend
+    image: "ghcr.io/adamskye/gg-backend"
     volumes:
       - ./backend-uploads:/app/uploaded_files
     environment:
       - OLLAMA_HOST=ollama:11434
 
   gg-frontend:
-    build: ../Frontend
+    image: "ghcr.io/adamskye/gg-frontend"
 
   caddy:
     image: caddy:latest
@@ -25,7 +25,7 @@ services:
         - ./run_ollama.sh:/scripts/run_ollama.sh:Z
       ports:
         - "11434:11434"
-      entrypoint: ["/bin/sh", "/scripts/run_ollama.sh"]
+      # entrypoint: ["/bin/sh", "/scripts/run_ollama.sh"]
 
 volumes:
   caddy-data:
