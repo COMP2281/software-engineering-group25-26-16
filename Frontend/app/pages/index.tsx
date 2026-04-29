@@ -56,8 +56,11 @@ export default function Index() {
           <Shield size={64} className="hero_icon" />
           <h1 className="hero_title">Granite Guardian</h1>
           <p className="hero_subtitle">
-            Your intelligent, secure, and AI-powered data companion. Sign in to
-            access your dashboard and start chatting.
+            Your intelligent, secure, and AI-powered car diagnostic companion.
+          </p>
+          <p className="hero_subtitle">
+            Sign in to access your dashboard, upload OBD-II logs, and start
+            chatting.
           </p>
         </div>
       </div>
