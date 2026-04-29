@@ -43,3 +43,12 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def get_db_manual_close():
+    global initialised
+    if not initialised:
+        print("Creating the database")
+        Base.metadata.create_all(bind=engine)  # Create tables if they don't exist
+        initialised = True
+
+    return SessionLocal()

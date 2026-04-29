@@ -35,9 +35,6 @@ ANOMALY_THRESHOLDS = {
     "ENGINE LOAD":                {"min": 0,    "max": 95},
 }
 
-# Granite / Ollama model settings
-GRANITE_MODEL = os.getenv("GRANITE_MODEL") or "granite4:350m"
-
 MODELS_PATH = os.getenv("MODELS_PATH")
 if MODELS_PATH is not None:
     MODELS_PATH = Path(MODELS_PATH)

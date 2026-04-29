@@ -9,7 +9,6 @@ Docs at:   http://localhost:8000/docs  (Swagger UI)
 """
 from collections.abc import Iterable
 from fastapi.responses import StreamingResponse
-from config import GRANITE_MODEL, MODELS_PATH
 from datetime import datetime
 from typing import Optional
 from sqlalchemy import desc
@@ -19,9 +18,9 @@ import logging
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from database import get_db
+from database import get_db, get_db_manual_close
 import ollama
-from routes import upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
+from routes import settings_routes, upload_routes, data_routes, diagnostics_routes, alert_routes, granite_routes
 from pydantic import BaseModel
 from services import user_service
 from fastapi import Response, HTTPException
@@ -34,6 +33,9 @@ from middleware.rate_limiter import register_rate_limiter
 from middleware.request_logger import RequestLoggerMiddleware
 import time
 
+from services.granite_service import pull_model
+from services.settings_services import get_model
+
 # grab granite model
 ollama_running = False
 
@@ -45,14 +47,12 @@ while not ollama_running:
         print("Ollama not running, trying again in 2 seconds...")
         time.sleep(2)
 
-print(f"Pulling Granite model ({GRANITE_MODEL}), this may take a while...")
+db_temp = get_db_manual_close()
+model = get_model(get_db_manual_close())
+db_temp.close()
 
-try:
-    ollama.pull(GRANITE_MODEL)
-    print(f"Finished pulling Granite model ({GRANITE_MODEL}).")
-except:
-    print("Failed to pull Granite model (perhaps model does not exist?).")
-    print("AI chatbot features will not work!")
+print(f"Pulling Granite model ({model}), this may take a while...")
+pull_model(model)
 
 #Logging 
 logging.basicConfig(
@@ -356,7 +356,7 @@ def chat_with_granite_impl(
 
         # send message to ollama
         response = ollama.chat(
-            model=GRANITE_MODEL,
+            model=get_model(db),
             messages=ollama_messages,
             stream=True
         )
@@ -399,6 +399,7 @@ app.include_router(data_routes.router)
 app.include_router(diagnostics_routes.router)
 app.include_router(alert_routes.router)
 app.include_router(granite_routes.router)
+app.include_router(settings_routes.router)
 
 # Health check 
 @app.get("/", tags=["Health"])

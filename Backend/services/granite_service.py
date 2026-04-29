@@ -4,11 +4,12 @@ Uses Ollama to run Granite locally for generating user-friendly diagnostics.
 """
 
 from collections.abc import Iterable
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
-from config import GRANITE_MODEL
+from database import get_db
 from models.upload import FileWarning
 from routes.diagnostics_routes import run_diagnostics
+from services.settings_services import get_model
 from services.validators import validate_filename
 import ollama
 
@@ -53,7 +54,15 @@ def _build_prompt(warnings: list[dict], filename: str, alert_index: int | None =
 
     return prompt
 
-def generate_explanation_for_warning(warning_id: int, query: str, db: Session) -> Iterable[str]:
+def pull_model(model_name: str):
+    try:
+        ollama.pull(model_name)
+        print(f"Finished pulling Granite model ({model_name}).")
+    except:
+        print("Failed to pull Granite model (perhaps model does not exist?).")
+        print("AI chatbot features will not work!")
+
+def generate_explanation_for_warning(warning_id: int, query: str, db: Session = Depends(get_db)) -> Iterable[str]:
     # Get warning
     warning = db.query(FileWarning).filter(FileWarning.id == warning_id).first()
 
@@ -76,7 +85,7 @@ def generate_explanation_for_warning(warning_id: int, query: str, db: Session) -
 
     # Try Granite via Ollama
     try:
-        response = ollama.generate(GRANITE_MODEL, prompt, stream=True)
+        response = ollama.generate(get_model(db), prompt, stream=True)
         for chunk in response:
             yield chunk.response
     except ImportError:
@@ -85,91 +94,3 @@ def generate_explanation_for_warning(warning_id: int, query: str, db: Session) -
     except Exception as e:
         print(f"Error generating Granite explanation: {e}")
         pass
-
-
-def generate_explanation(filename: str, alert_index: int | None = None) -> dict:
-    """
-    Generate a natural-language explanation of diagnostics using IBM Granite.
-    Falls back to a formatted summary if Granite/Ollama is unavailable.
-    """
-    filename = validate_filename(filename)
-    diagnostics = run_diagnostics(filename)
-    warnings = diagnostics.get("warnings", [])
-
-    if not warnings:
-        return {
-            "filename": filename,
-            "explanation": "No issues were found in your vehicle data. Everything looks normal.",
-            "source": "system",
-            "alert_index": alert_index,
-        }
-
-    prompt = _build_prompt(warnings, filename, alert_index)
-
-    # Try Granite via Ollama
-    try:
-        from ollama import generate as ollama_generate
-        response = ollama_generate(GRANITE_MODEL, prompt)
-        explanation = response.get("response", "").strip()
-
-        if explanation:
-            return {
-                "filename": filename,
-                "explanation": explanation,
-                "source": "granite",
-                "alert_index": alert_index,
-                "total_warnings": len(warnings),
-            }
-    except ImportError:
-        pass
-    except Exception:
-        pass
-
-    # Fallback
-    explanation = _fallback_explanation(warnings, alert_index)
-    return {
-        "filename": filename,
-        "explanation": explanation,
-        "source": "fallback",
-        "alert_index": alert_index,
-        "total_warnings": len(warnings),
-        "note": "Granite model unavailable – showing template-based explanation.",
-    }
-
-
-def _fallback_explanation(warnings: list[dict], alert_index: int | None = None) -> str:
-    """Generate a readable explanation without the LLM."""
-    if alert_index is not None:
-        w = warnings[alert_index]
-        severity = w.get("severity", "unknown")
-        message = w.get("message", "An issue was detected.")
-        urgency = "You should address this soon." if severity in ("high", "critical") else "This is not urgent but worth monitoring."
-        return f"{message} {urgency}"
-
-    critical = [w for w in warnings if w.get("severity") == "critical"]
-    high = [w for w in warnings if w.get("severity") == "high"]
-    medium = [w for w in warnings if w.get("severity") == "medium"]
-    low = [w for w in warnings if w.get("severity") == "low"]
-
-    parts = [f"Your vehicle scan found {len(warnings)} issue(s)."]
-
-    if critical:
-        parts.append(f"{len(critical)} critical issue(s) need immediate attention:")
-        for w in critical[:3]:
-            parts.append(f"  - {w.get('message', 'Unknown')}")
-
-    if high:
-        parts.append(f"{len(high)} high-severity issue(s) found:")
-        for w in high[:3]:
-            parts.append(f"  - {w.get('message', 'Unknown')}")
-
-    if medium:
-        parts.append(f"{len(medium)} medium-severity issue(s) worth monitoring.")
-
-    if low:
-        parts.append(f"{len(low)} low-severity item(s) noted.")
-
-    if critical or high:
-        parts.append("It is recommended you have your vehicle inspected by a professional.")
-
-    return "\n".join(parts)

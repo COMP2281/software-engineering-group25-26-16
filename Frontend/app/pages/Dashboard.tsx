@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "../styles/pages.css";
 import "../styles/dashboard.css";
 import type { FileStats } from "~/types";
 import { Button } from "~/components/button";
 import Diagnostics, { run_diagnostics } from "./diagnostics";
 import { Bar } from "react-chartjs-2";
-import { CategoryScale } from "chart.js";
 
 function Bars({
   fileStats,
