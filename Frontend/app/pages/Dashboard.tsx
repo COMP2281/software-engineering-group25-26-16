@@ -5,6 +5,7 @@ import type { FileStats } from "~/types";
 import { Button } from "~/components/button";
 import Diagnostics, { run_diagnostics } from "./diagnostics";
 import { Bar } from "react-chartjs-2";
+import { CategoryScale } from "chart.js";
 
 function Bars({
   fileStats,
@@ -16,7 +17,6 @@ function Bars({
   setSelectedFilename: (filename: string) => void;
 }) {
   let labels = fileStats.map((stat) => stat.filename);
-  let diagnosticsRan = fileStats.filter((stat) => stat.diagnostics_ran);
 
   // show bar graph with chart.js
   const options = {
@@ -38,15 +38,18 @@ function Bars({
     },
   };
 
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "Diagnostics Ran",
-        data: diagnosticsRan.map((stat) => stat.warning_count),
-      },
-    ],
-  };
+  const data = useMemo(() => {
+    const diagnosticsRan = fileStats.filter((stat) => stat.diagnostics_ran);
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Diagnostics Ran",
+          data: diagnosticsRan.map((stat) => stat.warning_count),
+        },
+      ],
+    };
+  }, [fileStats]);
 
   return (
     <div className="bar_chart_container">

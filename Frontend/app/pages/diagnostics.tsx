@@ -1,10 +1,8 @@
-import type { File } from "~/types";
 import type { Warning } from "~/types";
 import { Button } from "~/components/button";
 import { useEffect, useRef, useState } from "react";
-import { Chart } from "chart.js/auto";
 import { Bar, Scatter } from "react-chartjs-2";
-import { Trash } from "lucide-react";
+import Chart from "react-google-charts";
 
 type Sender = "Granite" | "You";
 
@@ -92,20 +90,6 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
         return new_arr;
       });
     }
-
-    // let response_json: GraniteResponse = await response.json();
-    //
-    // setGraniteMessages([
-    //   ...graniteMessages,
-    //   {
-    //     sender: "You",
-    //     message: graniteInput,
-    //   },
-    //   {
-    //     sender: "Granite",
-    //     message: response_json.explanation,
-    //   },
-    // ]);
   };
 
   return (
@@ -196,6 +180,144 @@ function WarningTypeFrequencyChart({ warnings }: { warnings: Warning[] }) {
   };
 
   return <Bar data={data} options={options} />;
+}
+
+function DiagnosticsChartNew({
+  warnings,
+  setSelectedWarning,
+}: {
+  warnings: Warning[];
+  setSelectedWarning: (w: Warning) => void;
+}) {
+  // creating a timeline chart with x axis as run_time, y axis as type of warning, and color as severity
+  // we will group together warnings that are close in run_time and of the same type, and show the number of warnings in that group as the size of the point on the chart
+  // and we will use google-react-charts
+
+  interface Region {
+    start_warning: Warning;
+    end: number;
+    num_severity: Map<string, number>;
+  }
+
+  // maps ids to warnings
+  // stores warnings that start a region
+  let start_warnings = new Map<number, Warning>();
+
+  interface WarningTypeState {
+    last_occurred_at: number;
+    regions: Region[];
+  }
+
+  // contains WarningTypeState for each type of warning
+  let warning_type_timelines = new Map<string, WarningTypeState>();
+
+  // make sure `warnings` is sorted by run time
+  warnings.sort((a, b) => a.run_time - b.run_time);
+
+  for (let w of warnings) {
+    let state = warning_type_timelines.get(w.type);
+
+    if (state === undefined) {
+      // start first region for this warning type
+      warning_type_timelines.set(w.type, {
+        last_occurred_at: w.run_time,
+        regions: [
+          {
+            start_warning: w,
+            end: w.run_time,
+            num_severity: new Map([[w.severity, 1]]),
+          },
+        ],
+      });
+
+      start_warnings.set(w.id, w);
+      continue;
+    }
+
+    // warning type is already included
+
+    // if warning has occurred less than 10 seconds after the previous one,
+    // then group it together into the last region
+    let last_region = state.regions[state.regions.length - 1];
+    if (w.run_time - last_region.end < 10) {
+      last_region.end = w.run_time;
+      last_region.num_severity.set(
+        w.severity,
+        (last_region.num_severity.get(w.severity) || 0) + 1,
+      );
+      continue;
+    }
+
+    // otherwise, create a new region
+    state.regions.push({
+      start_warning: w,
+      end: w.run_time,
+      num_severity: new Map([[w.severity, 1]]),
+    });
+
+    start_warnings.set(w.id, w);
+  }
+
+  // create data for chart
+  const columns = [
+    { type: "string", id: "Warning Type" },
+    { type: "string", id: "Severity Message" },
+    { type: "date", id: "Start" },
+    { type: "date", id: "End" },
+  ];
+
+  let data = [];
+  let starts = [];
+  for (let [warning_type, state] of warning_type_timelines.entries()) {
+    for (let region of state.regions) {
+      // get most common severity in region
+      let most_common_severity = "low";
+      let max_count = 0;
+      for (let [severity, count] of region.num_severity.entries()) {
+        if (count > max_count) {
+          max_count = count;
+          most_common_severity = severity;
+        }
+      }
+
+      data.push([
+        warning_type,
+        most_common_severity + " severity",
+        new Date(0, 0, 0, 0, 0, region.start_warning.run_time),
+        new Date(0, 0, 0, 0, 0, region.end),
+      ]);
+      starts.push(region.start_warning);
+    }
+  }
+
+  let chartEvents = [
+    {
+      eventName: "select",
+
+      callback: ({ chartWrapper }: any) => {
+        const chart = chartWrapper.getChart();
+        const selection = chart.getSelection();
+        if (selection.length === 0) return;
+
+        const selectedItem = selection[0];
+        const index = selectedItem.row;
+
+        // warning that starts off this region
+        const start_warning = starts[index];
+        setSelectedWarning(start_warning);
+      },
+    },
+  ];
+
+  return (
+    <Chart
+      chartType="Timeline"
+      data={[columns, ...data]}
+      width="100%"
+      // @ts-expect-error
+      chartEvents={chartEvents}
+    />
+  );
 }
 
 function DiagnosticsChart({
@@ -334,7 +456,7 @@ function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
         <WarningTypeFrequencyChart warnings={warnings} />
       )}
       {graphShown == "timeline" && (
-        <DiagnosticsChart
+        <DiagnosticsChartNew
           warnings={warnings}
           setSelectedWarning={setSelectedWarning}
         />
