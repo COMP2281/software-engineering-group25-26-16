@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router";
 import "../styles/sidebar.css";
-import { LayoutDashboard, Upload, MessageCircle, Menu } from "lucide-react";
+import {
+  LayoutDashboard,
+  Upload,
+  MessageCircle,
+  Menu,
+  LogOut,
+} from "lucide-react";
 import { Button } from "./button";
 
 function Sidebar() {
@@ -39,36 +45,41 @@ function Sidebar() {
         {!isCollapsed && <h2>Granite Guardian</h2>}
       </div>
 
-      <nav className="sidebar_nav">
-        <Link
-          to="/dashboard"
-          className={
-            isActive("/dashboard") ? "sidebar_link active" : "sidebar_link"
-          }
-        >
-          <LayoutDashboard size={20} />
-          <span> Dashboard </span>
-        </Link>
-        <Link
-          to="/upload"
-          className={
-            isActive("/upload") ? "sidebar_link active" : "sidebar_link"
-          }
-        >
-          <Upload size={18} />
-          <span> Upload </span>
-        </Link>
-        <Link
-          to="/chatbot"
-          className={
-            isActive("/chatbot") ? "sidebar_link active" : "sidebar_link"
-          }
-        >
-          <MessageCircle size={18} />
-          <span> Chatbot </span>
-        </Link>
+      <nav className="sidebar_nav flex flex-col justify-between h-screen">
+        <div>
+          <Link
+            to="/dashboard"
+            className={
+              isActive("/dashboard") ? "sidebar_link active" : "sidebar_link"
+            }
+          >
+            <LayoutDashboard size={20} />
+            <span> Dashboard </span>
+          </Link>
+          <Link
+            to="/upload"
+            className={
+              isActive("/upload") ? "sidebar_link active" : "sidebar_link"
+            }
+          >
+            <Upload size={18} />
+            <span> Upload </span>
+          </Link>
+          <Link
+            to="/chatbot"
+            className={
+              isActive("/chatbot") ? "sidebar_link active" : "sidebar_link"
+            }
+          >
+            <MessageCircle size={18} />
+            <span> Chatbot </span>
+          </Link>
+        </div>
 
-        <Button onClick={sign_out}>Sign Out</Button>
+        <Link onClick={sign_out} to="/" className="sidebar_link">
+          <LogOut />
+          <span>Sign Out</span>
+        </Link>
       </nav>
     </div>
   );
