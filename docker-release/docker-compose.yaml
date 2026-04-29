@@ -23,7 +23,7 @@ services:
       image: ollama/ollama:latest
       volumes:
         - ollama:/root/.ollama
-        - ./run_ollama.sh:/scripts/run_ollama.sh:Z
+        # - ./run_ollama.sh:/scripts/run_ollama.sh:Z
       ports:
         - "11434:11434"
       # entrypoint: ["/bin/sh", "/scripts/run_ollama.sh"]
