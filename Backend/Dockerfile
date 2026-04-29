@@ -20,6 +20,9 @@ COPY . .
 # Delete SQL database
 RUN rm -f /app/granite.db
 
+# Delete uploaded files
+RUN rm -rf /app/uploaded_data/*
+
 # Expose port
 EXPOSE 8000
 

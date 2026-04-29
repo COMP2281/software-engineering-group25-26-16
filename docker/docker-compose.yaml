@@ -4,6 +4,7 @@ services:
     volumes:
       - ./backend-uploads:/app/uploaded_files
     environment:
+      - GRANITE_MODEL=granite4:350m
       - OLLAMA_HOST=ollama:11434
 
   gg-frontend:
@@ -22,10 +23,8 @@ services:
       image: ollama/ollama:latest
       volumes:
         - ollama:/root/.ollama
-        - ./run_ollama.sh:/scripts/run_ollama.sh:Z
       ports:
         - "11434:11434"
-      entrypoint: ["/bin/sh", "/scripts/run_ollama.sh"]
 
 volumes:
   caddy-data:

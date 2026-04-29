@@ -363,7 +363,6 @@ def chat_with_granite_impl(
         assistant_reply  = ""
         for chunk in response:
             assistant_reply += chunk["message"]["content"]
-            print(f"{chunk["message"]["content"]}")
             yield chunk["message"]["content"]
 
         # Save the assistant reply too
