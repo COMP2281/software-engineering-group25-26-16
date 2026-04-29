@@ -79,7 +79,7 @@ export default function Index() {
             {!isLogin && (
               <div className="input_group">
                 <label>Username</label>
-                <div className="input_wrapper">
+                <div className="input_wrapper input_wrapper_icon">
                   <User size={18} className="input_icon" />
                   <input
                     type="text"
@@ -95,7 +95,7 @@ export default function Index() {
             {/* EMAIL FIELD: Always visible */}
             <div className="input_group fade_in">
               <label>Email</label>
-              <div className="input_wrapper">
+              <div className="input_wrapper input_wrapper_icon">
                 <Mail size={18} className="input_icon" />
                 <input
                   type="email"
@@ -110,7 +110,7 @@ export default function Index() {
             {/* PASSWORD FIELD: Always visible */}
             <div className="input_group">
               <label>Password</label>
-              <div className="input_wrapper">
+              <div className="input_wrapper input_wrapper_icon">
                 <Lock size={18} className="input_icon" />
                 <input
                   type="password"
@@ -150,4 +150,3 @@ export default function Index() {
     </div>
   );
 }
-

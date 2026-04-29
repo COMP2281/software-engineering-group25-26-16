@@ -106,7 +106,7 @@ function DiagnosticInfo({ warning }: { warning: Warning }) {
       </p>
       <p>{warning.message}</p>
 
-      <div className="flex flex-row m-2">
+      <div className="flex flex-row m-2 input_wrapper">
         <input
           type="text"
           value={graniteInput}

@@ -7,13 +7,6 @@ import "./styles/chatbot.css";
 import { Chart } from "chart.js/auto";
 
 export default function App() {
-  // useEffect(() => {
-  //   if (typeof window !== "undefined")
-  //     import("chartjs-plugin-zoom").then((plugin) => {
-  //       Chart.register(plugin.default);
-  //     });
-  // }, []);
-
   return <AppInner />;
 }
 
