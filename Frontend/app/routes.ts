@@ -12,7 +12,6 @@ export default [
     route("dashboard", "pages/Dashboard.tsx"),
     route("upload", "pages/upload.tsx"),
     route("chatbot", "pages/chatbot.tsx"),
-    route("settings", "pages/settings.tsx"),
   ]),
 
   route("*", "pages/notfound.tsx"),

@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { Shield, Mail, Lock, ArrowRight, User } from "lucide-react";
 import "../styles/index.css"; // Uses the exact same CSS we wrote earlier!
+import Settings from "./settings";
+import { Button } from "~/components/button";
 
-export default function Index() {
+function AuthForm() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
 
@@ -49,6 +51,99 @@ export default function Index() {
   };
 
   return (
+    <div className="index_auth w-full h-screen">
+      <div className="auth_card">
+        <h2>{isLogin ? "Welcome back" : "Create an account"}</h2>
+        <p className="auth_description">
+          {isLogin
+            ? "Enter your details to access your account."
+            : "Sign up to get started with Granite Guardian."}
+        </p>
+
+        {error && <div className="auth_error">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="auth_form">
+          {/* USERNAME FIELD: Always visible */}
+          {!isLogin && (
+            <div className="input_group">
+              <label>Username</label>
+              <div className="input_wrapper input_wrapper_icon">
+                <User size={18} className="input_icon" />
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g. mechanic_mike"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* EMAIL FIELD: Always visible */}
+          <div className="input_group">
+            <label>Email</label>
+            <div className="input_wrapper input_wrapper_icon">
+              <Mail size={18} className="input_icon" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@company.com"
+              />
+            </div>
+          </div>
+
+          {/* PASSWORD FIELD: Always visible */}
+          <div className="input_group">
+            <label>Password</label>
+            <div className="input_wrapper input_wrapper_icon">
+              <Lock size={18} className="input_icon" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="auth_submit">
+            {isLogin ? "Sign In" : "Create Account"}
+            <ArrowRight size={18} />
+          </button>
+        </form>
+
+        {/* TOGGLE BUTTON */}
+        <div className="auth_switch">
+          <p>
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError(""); // Clears out any red error boxes when switching views
+              }}
+            >
+              {isLogin ? "Sign up" : "Log in"}
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+enum Section {
+  Auth,
+  Settings,
+}
+
+export default function Index() {
+  let [section, setSection] = useState(Section.Auth);
+  return (
     <div className="index_container">
       {/* LEFT SIDE: Branding & Hero */}
       <div className="index_hero">
@@ -66,89 +161,26 @@ export default function Index() {
       </div>
 
       {/* RIGHT SIDE: Auth Form */}
-      <div className="index_auth">
-        <div className="auth_card">
-          <h2>{isLogin ? "Welcome back" : "Create an account"}</h2>
-          <p className="auth_description">
-            {isLogin
-              ? "Enter your details to access your account."
-              : "Sign up to get started with Granite Guardian."}
-          </p>
-
-          {error && <div className="auth_error">{error}</div>}
-
-          <form onSubmit={handleSubmit} className="auth_form">
-            {/* USERNAME FIELD: Always visible */}
-            {!isLogin && (
-              <div className="input_group">
-                <label>Username</label>
-                <div className="input_wrapper input_wrapper_icon">
-                  <User size={18} className="input_icon" />
-                  <input
-                    type="text"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. mechanic_mike"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* EMAIL FIELD: Always visible */}
-            <div className="input_group fade_in">
-              <label>Email</label>
-              <div className="input_wrapper input_wrapper_icon">
-                <Mail size={18} className="input_icon" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                />
-              </div>
-            </div>
-
-            {/* PASSWORD FIELD: Always visible */}
-            <div className="input_group">
-              <label>Password</label>
-              <div className="input_wrapper input_wrapper_icon">
-                <Lock size={18} className="input_icon" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-
-            <button type="submit" className="auth_submit">
-              {isLogin ? "Sign In" : "Create Account"}
-              <ArrowRight size={18} />
-            </button>
-          </form>
-
-          {/* TOGGLE BUTTON */}
-          <div className="auth_switch">
-            <p>
-              {isLogin
-                ? "Don't have an account? "
-                : "Already have an account? "}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setError(""); // Clears out any red error boxes when switching views
-                }}
-              >
-                {isLogin ? "Sign up" : "Log in"}
-              </button>
-            </p>
-          </div>
+      {section === Section.Auth && (
+        <div className="w-1/2 h-full">
+          <AuthForm />
         </div>
+      )}
+      {section === Section.Settings && (
+        <div className="w-1/2 h-full">
+          <Settings />
+        </div>
+      )}
+
+      <div className="fixed bottom-0 right-0">
+        {section == Section.Auth && (
+          <Button onClick={() => setSection(Section.Settings)}>Settings</Button>
+        )}
+        {section == Section.Settings && (
+          <Button onClick={() => setSection(Section.Auth)}>
+            Login/Register
+          </Button>
+        )}
       </div>
     </div>
   );

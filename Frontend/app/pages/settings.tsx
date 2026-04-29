@@ -39,7 +39,7 @@ function Settings() {
   };
 
   return (
-    <div className="page_container bg-main min-h-screen">
+    <div className="page_container h-screen w-full bg-[#f8fafc]">
       <header>
         <h1>Settings</h1>
       </header>

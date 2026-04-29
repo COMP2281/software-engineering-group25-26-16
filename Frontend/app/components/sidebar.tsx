@@ -79,15 +79,6 @@ function Sidebar() {
         </div>
 
         <div>
-          <Link
-            to="/settings"
-            className={
-              isActive("/settings") ? "sidebar_link active" : "sidebar_link"
-            }
-          >
-            <Settings size={18} />
-            <span> Settings </span>
-          </Link>
           <Link onClick={sign_out} to="/" className="sidebar_link">
             <LogOutIcon size={18} />
             <span> Sign Out </span>
