@@ -1,7 +1,7 @@
 import type { Warning } from "~/types";
 import { Button } from "~/components/button";
 import { useEffect, useRef, useState } from "react";
-import { Bar, Scatter } from "react-chartjs-2";
+import { Bar, Scatter, Pie } from "react-chartjs-2";
 import Chart from "react-google-charts";
 
 type Sender = "Granite" | "You";
@@ -180,6 +180,48 @@ function WarningTypeFrequencyChart({ warnings }: { warnings: Warning[] }) {
   };
 
   return <Bar data={data} options={options} />;
+}
+
+function WarningTypePieChart({ warnings }: { warnings: Warning[] }) {
+  const type_counts = warnings.reduce(
+    (acc, w) => {
+      acc[w.type] = (acc[w.type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  const data = {
+    labels: Object.keys(type_counts),
+    datasets: [
+      {
+        label: "Warning Type Distribution",
+        data: Object.values(type_counts),
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.5)",
+          "rgba(255, 206, 86, 0.5)",
+          "rgba(75, 192, 192, 0.5)",
+        ],
+      },
+    ],
+  };
+
+  const options = {
+    plugins: {
+      legend: {
+        position: "bottom" as const,
+      },
+    },
+  };
+
+  // pie chart
+  return (
+    <div className="flex justify-center">
+      <div className="w-1/2">
+        <Pie data={data} options={options} />
+      </div>
+    </div>
+  );
 }
 
 function DiagnosticsChartNew({
@@ -453,7 +495,11 @@ function DiagnosticsChartArea({ warnings }: { warnings: Warning[] }) {
         </Button>
       )}
       {graphShown == "frequency" && (
-        <WarningTypeFrequencyChart warnings={warnings} />
+        <>
+          <WarningTypePieChart warnings={warnings} />
+          <br />
+          <WarningTypeFrequencyChart warnings={warnings} />
+        </>
       )}
       {graphShown == "timeline" && (
         <DiagnosticsChartNew
