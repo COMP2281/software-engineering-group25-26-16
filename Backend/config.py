@@ -42,6 +42,9 @@ MODELS_PATH = os.getenv("MODELS_PATH")
 if MODELS_PATH is not None:
     MODELS_PATH = Path(MODELS_PATH)
 
+    # create directory
+    os.makedirs(MODELS_PATH, exist_ok=True)
+
 # Pagination defaults
 DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 500

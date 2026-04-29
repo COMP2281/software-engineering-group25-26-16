@@ -7,9 +7,9 @@ Mounts all route modules and registers middleware.
 Run with:  uvicorn main:app --reload
 Docs at:   http://localhost:8000/docs  (Swagger UI)
 """
-from collections.abc import AsyncIterable, Iterable
+from collections.abc import Iterable
 from fastapi.responses import StreamingResponse
-from config import GRANITE_MODEL
+from config import GRANITE_MODEL, MODELS_PATH
 from datetime import datetime
 from typing import Optional
 from sqlalchemy import desc
