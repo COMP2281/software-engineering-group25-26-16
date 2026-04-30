@@ -1,8 +1,6 @@
 services:
   gg-backend:
     build: ../Backend
-    volumes:
-      - ./backend-uploads:/app/uploaded_files
     environment:
       - GRANITE_MODEL=granite4:350m
       - OLLAMA_HOST=ollama:11434
